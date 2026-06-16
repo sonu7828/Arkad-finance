@@ -112,9 +112,12 @@ export default function AdminPayments() {
     const newDueDate = new Date(loan.dueDate);
     newDueDate.setMonth(newDueDate.getMonth() + 1);
 
+    const paymentsCount = (loan.payments?.length || 0) + 1;
+    const isCompleted = paymentsCount >= (parseInt(loan.duration) || 1);
+
     updateLoan(loan.id, {
       dueDate: newDueDate.toISOString().split('T')[0],
-      status: 'active',
+      status: isCompleted ? 'completed' : 'active',
       carriedForwardDue: 0,
       agentCommissionUnlocked: (loan.agentCommissionUnlocked || 0) + agentComm,
       payments: [...(loan.payments || []), {
@@ -130,7 +133,10 @@ export default function AdminPayments() {
     });
 
     setRecordedSessions(prev => ({ ...prev, [loan.id]: { collected: amountDue, principalApplied: 0, remaining: 0 } }));
-    setSmsSentText(`Payment of ${formatMoney(amountDue)} recorded for ${loan.user?.name || 'client'}. Next due: ${formatDateDDMMYYYY(newDueDate.toISOString().split('T')[0])}`);
+    setSmsSentText(isCompleted 
+      ? `Congratulations! Payment of ${formatMoney(amountDue)} recorded. Your loan contract #${loan.id} is now fully repaid.`
+      : `Payment of ${formatMoney(amountDue)} recorded for ${loan.user?.name || 'client'}. Next due: ${formatDateDDMMYYYY(newDueDate.toISOString().split('T')[0])}`
+    );
     setActiveExactModal(null);
     setConfirmCheckbox(false);
   };
@@ -144,9 +150,14 @@ export default function AdminPayments() {
     const newDueDate = new Date(loan.dueDate);
     newDueDate.setMonth(newDueDate.getMonth() + 1);
 
+    const paymentsCount = (loan.payments?.length || 0) + 1;
+    // If it's the final month but partial payment, don't complete it until remaining is paid
+    const isCompleted = paymentsCount >= (parseInt(loan.duration) || 1) && remaining <= 0;
+
     updateLoan(loan.id, {
       dueDate: newDueDate.toISOString().split('T')[0],
-      carriedForwardDue: remaining, // Only the new remaining carries forward (replaces old carried amount since it was included in amountDue)
+      status: isCompleted ? 'completed' : 'active',
+      carriedForwardDue: remaining, // Only the new remaining carries forward
       agentCommissionUnlocked: (loan.agentCommissionUnlocked || 0) + agentComm,
       payments: [...(loan.payments || []), {
         id: `TRX-${Date.now()}`,
@@ -162,7 +173,10 @@ export default function AdminPayments() {
     });
 
     setRecordedSessions(prev => ({ ...prev, [loan.id]: { collected, principalApplied: 0, remaining } }));
-    setSmsSentText(`Partial payment of ${formatMoney(collected)} recorded. Remaining: ${formatMoney(remaining)}`);
+    setSmsSentText(isCompleted 
+      ? `Congratulations! Partial payment of ${formatMoney(collected)} recorded. Your loan is now fully repaid.`
+      : `Partial payment of ${formatMoney(collected)} recorded. Remaining: ${formatMoney(remaining)}`
+    );
     setActivePartialModal(null);
   };
 
@@ -242,11 +256,6 @@ export default function AdminPayments() {
         <div>
           <h2 className="text-lg font-extrabold text-slate-900 tracking-tight">Due Payments & Collections</h2>
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Manage loans due today or overdue and receive payments</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Btn variant="outline" size="sm" onClick={generateDummyPaymentsData} className="flex items-center gap-1.5">
-            <Database size={12} /> Refresh Trial Data
-          </Btn>
         </div>
       </div>
 

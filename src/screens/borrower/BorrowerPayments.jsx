@@ -66,22 +66,73 @@ export default function BorrowerPayments() {
 
   const totalDebtBalance = debtBreakdown.reduce((s, d) => s + d.total, 0);
 
-  // ── Real payment history from loan.payments[] ────────────────────────────
+  // ── Real payment history from loan.payments[] + Scheduled ────────────────
   const allPayments = useMemo(() => {
     const result = [];
     myLoans.forEach(l => {
-      if (Array.isArray(l.payments)) {
-        l.payments.forEach(p => result.push({ ...p, loanId: l.id }));
+      const details = calculateLoanDetails({
+        principal: l.principalAmount,
+        remainingPrincipal: l.remainingPrincipal,
+        duration: l.duration,
+        interestRate: l.interestRate,
+      });
+      const monthlyAmount = details.monthlyInstallment || details.monthlyPaymentCurrent || 0;
+
+      const startDate = new Date(l.disbursementDate || l.createdAt || Date.now());
+      const actualPayments = Array.isArray(l.payments) ? [...l.payments] : [];
+      // Sort actual payments chronologically by date
+      actualPayments.sort((a, b) => new Date(a.date || a.createdAt || 0) - new Date(b.date || b.createdAt || 0));
+
+      const duration = parseInt(l.duration) || 12;
+
+      for (let i = 1; i <= duration; i++) {
+        const dueDate = new Date(startDate);
+        dueDate.setMonth(dueDate.getMonth() + i);
+
+        // Match actual payment by index
+        const actual = actualPayments[i - 1];
+
+        if (actual && actual.status !== 'PENDING' && actual.status !== 'DUE SOON') {
+          result.push({
+            loanId: l.id,
+            id: actual.id || `${l.id}-sch-${i}`,
+            dueDate: dueDate.toISOString(),
+            amount: actual.amount || actual.totalCollected || actual.baseAmount || monthlyAmount,
+            status: 'PAID',
+            date: actual.date || actual.createdAt,
+          });
+        } else {
+          const today = new Date();
+          // Remove time for pure date comparison
+          today.setHours(0, 0, 0, 0);
+          const dueCompare = new Date(dueDate);
+          dueCompare.setHours(0, 0, 0, 0);
+
+          let status = 'PENDING';
+          if (dueCompare > today) {
+            status = 'DUE SOON';
+          }
+
+          result.push({
+            loanId: l.id,
+            id: `${l.id}-sch-${i}`,
+            dueDate: dueDate.toISOString(),
+            amount: monthlyAmount,
+            status: status,
+            date: null,
+          });
+        }
       }
     });
     // Sort oldest first by due date
-    return result.sort((a, b) => new Date(a.dueDate || a.date || a.createdAt || 0) - new Date(b.dueDate || b.date || b.createdAt || 0));
+    return result.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
   }, [myLoans]);
 
   const [localPayments, setLocalPayments] = useState([]);
   const allDisplayPayments = [...localPayments, ...allPayments];
 
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
   const [viewModal, setViewModal] = useState(null);
   const [showPayModal, setShowPayModal] = useState(false);
 
@@ -94,6 +145,7 @@ export default function BorrowerPayments() {
     preview: null,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successToast, setSuccessToast] = useState('');
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -126,17 +178,55 @@ export default function BorrowerPayments() {
       setIsSubmitting(false);
       setShowPayModal(false);
       setPayForm({ loanId: defaultLoanId, amount: '', method: 'Bank Transfer', receipt: null, preview: null });
-      alert('Payment submission successful! It is now pending verification.');
+      setSuccessToast('Payment submission successful! It is now pending verification.');
+      setTimeout(() => setSuccessToast(''), 4000);
     }, 1200);
   };
 
+  // ── Helpers ──────────────────────────────────────────────────────────────
+  const formatShortDate = (dateStr) => {
+    if (!dateStr || dateStr === 'N/A' || dateStr === '-') return '-';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return '-';
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  const formatMoneyShort = (value) => {
+    return `$${Number(value || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+  };
+
   const filtered = useMemo(() => {
-    const term = search.toLowerCase();
-    return allDisplayPayments.filter(p =>
-      String(p.loanId).toLowerCase().includes(term) ||
-      String(p.trxId || '').toLowerCase().includes(term)
-    );
-  }, [allDisplayPayments, search]);
+    let result = allDisplayPayments;
+
+    // Apply status filter
+    if (statusFilter !== 'ALL') {
+      result = result.filter(p => {
+        const s = String(p.status).toUpperCase();
+        if (statusFilter === 'PAID') return s === 'PAID' || s === 'VERIFIED';
+        if (statusFilter === 'PENDING') return s === 'PENDING';
+        if (statusFilter === 'DUE SOON') return s === 'DUE SOON';
+        return true;
+      });
+    }
+
+    // Apply search text
+    const term = search.toLowerCase().trim();
+    if (term) {
+      result = result.filter(p => {
+        const dateStr = formatShortDate(p.dueDate || p.createdAt).toLowerCase();
+        const amtStr = String(p.amount || p.totalCollected);
+        const statusStr = String(p.status).toLowerCase();
+        const idStr = String(p.loanId || '').toLowerCase();
+
+        return idStr.includes(term) ||
+          dateStr.includes(term) ||
+          amtStr.includes(term) ||
+          statusStr.includes(term);
+      });
+    }
+
+    return result;
+  }, [allDisplayPayments, search, statusFilter]);
 
   const totalVerifiedPaid = allDisplayPayments
     .filter(p => p.status === 'verified')
@@ -149,17 +239,6 @@ export default function BorrowerPayments() {
     { label: 'Pending Verification', value: pendingCount, icon: Clock, color: 'text-amber-500' },
     { label: 'Outstanding Debt', value: formatMoney(totalDebtBalance), icon: DollarSign, color: 'text-rose-500' },
   ];
-
-  const formatShortDate = (dateStr) => {
-    if (!dateStr || dateStr === 'N/A' || dateStr === '-') return '-';
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return '-';
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  };
-
-  const formatMoneyShort = (value) => {
-    return `$${Number(value || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
-  };
 
   const columns = [
     {
@@ -195,14 +274,14 @@ export default function BorrowerPayments() {
         }
         if (statusStr === 'DUE SOON') {
           return (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-blue-50 text-blue-600 border border-blue-100">
-              DUE SOON
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-slate-50 text-slate-500 border border-slate-200">
+              ⏱ DUE SOON
             </span>
           );
         }
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-amber-50 text-amber-600 border border-amber-100">
-            PENDING
+            ⏳ PENDING
           </span>
         );
       }
@@ -224,9 +303,6 @@ export default function BorrowerPayments() {
         subtitle="Manage your active liabilities and track historical transaction receipts."
         action={
           <div className="flex items-center gap-3">
-            <Btn variant="outline" onClick={() => generateDummyPaymentsData(user?.email, user?.name)} className="italic font-black uppercase tracking-widest text-[9px] rounded-xl !h-12 px-6">
-              Generate Trial Data
-            </Btn>
             <Btn onClick={() => setShowPayModal(true)} className="shadow-xl shadow-primary/20 italic font-black uppercase tracking-widest text-[9px] rounded-xl !h-12 px-6">
               <Plus size={16} className="mr-2" /> Make Payment
             </Btn>
@@ -253,13 +329,13 @@ export default function BorrowerPayments() {
           </div>
           {debtBreakdown.length > 0 && (
             <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3 text-xs font-bold overflow-x-auto w-full xl:w-auto">
-              <div className="text-slate-500 flex flex-col"><span className="text-[9px] uppercase tracking-widest mb-0.5">Principal</span><span className="text-slate-900">{formatMoney(debtBreakdown.reduce((s,d)=>s+d.principal,0))}</span></div>
+              <div className="text-slate-500 flex flex-col"><span className="text-[9px] uppercase tracking-widest mb-0.5">Principal</span><span className="text-slate-900">{formatMoney(debtBreakdown.reduce((s, d) => s + d.principal, 0))}</span></div>
               <div className="text-slate-300">+</div>
-              <div className="text-slate-500 flex flex-col"><span className="text-[9px] uppercase tracking-widest mb-0.5">Interest</span><span className="text-slate-900">{formatMoney(debtBreakdown.reduce((s,d)=>s+d.interest,0))}</span></div>
+              <div className="text-slate-500 flex flex-col"><span className="text-[9px] uppercase tracking-widest mb-0.5">Interest</span><span className="text-slate-900">{formatMoney(debtBreakdown.reduce((s, d) => s + d.interest, 0))}</span></div>
               <div className="text-slate-300">+</div>
-              <div className="text-slate-500 flex flex-col"><span className="text-[9px] uppercase tracking-widest mb-0.5">Fees</span><span className="text-rose-500">{formatMoney(debtBreakdown.reduce((s,d)=>s+d.fees,0))}</span></div>
+              <div className="text-slate-500 flex flex-col"><span className="text-[9px] uppercase tracking-widest mb-0.5">Fees</span><span className="text-rose-500">{formatMoney(debtBreakdown.reduce((s, d) => s + d.fees, 0))}</span></div>
               <div className="text-slate-300">-</div>
-              <div className="text-emerald-500 flex flex-col"><span className="text-[9px] uppercase tracking-widest mb-0.5">Paid</span><span>{formatMoney(debtBreakdown.reduce((s,d)=>s+d.paid,0))}</span></div>
+              <div className="text-emerald-500 flex flex-col"><span className="text-[9px] uppercase tracking-widest mb-0.5">Paid</span><span>{formatMoney(debtBreakdown.reduce((s, d) => s + d.paid, 0))}</span></div>
               <div className="text-primary text-base ml-2 flex flex-col"><span className="text-[9px] uppercase tracking-widest mb-0.5">Total Debt</span>{formatMoney(totalDebtBalance)}</div>
             </div>
           )}
@@ -272,15 +348,7 @@ export default function BorrowerPayments() {
             </div>
             <div>
               <p className="text-slate-700 font-bold text-sm">No active loan contracts found.</p>
-              <p className="text-slate-400 text-xs mt-1">To trial/test making payments and viewing receipt history, generate trial data.</p>
             </div>
-            <Btn 
-              onClick={() => generateDummyPaymentsData(user?.email, user?.name)}
-              className="mt-2 flex items-center gap-2 shadow-lg shadow-primary/20 rounded-xl"
-              size="sm"
-            >
-              <Plus size={14} /> Populate Trial Repayment Data
-            </Btn>
           </div>
         ) : (
           <div className="flex overflow-x-auto gap-6 pb-4 px-2 no-scrollbar snap-x snap-mandatory">
@@ -352,15 +420,30 @@ export default function BorrowerPayments() {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search reference or loan..."
-              className="w-full h-11 pl-12 pr-4 bg-white border border-slate-100 rounded-xl text-sm font-bold placeholder:text-slate-200 focus:border-primary/30 outline-none transition-all"
+              placeholder="Search by month (e.g. Apr), amount, or status..."
+              className="premium-input w-full h-12 pl-12 pr-4 bg-white border-slate-200 text-sm focus:border-primary"
             />
           </div>
         </div>
 
+        <div className="flex gap-2 px-2 overflow-x-auto no-scrollbar">
+          {['ALL', 'PAID', 'PENDING', 'DUE SOON'].map(filter => (
+            <button
+              key={filter}
+              onClick={() => setStatusFilter(filter)}
+              className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap ${statusFilter === filter
+                  ? 'bg-slate-900 text-white shadow-md'
+                  : 'bg-white text-slate-400 border border-slate-200 hover:bg-slate-50 hover:text-slate-600'
+                }`}
+            >
+              {filter}
+            </button>
+          ))}
+        </div>
+
         {filtered.length === 0 ? (
           <div className="pro-card p-10 text-center text-slate-400 text-sm font-bold">
-            No payment records found.
+            No payment records found matching your search.
           </div>
         ) : (
           <ProTable columns={columns} data={filtered} onRowClick={(row) => setViewModal(row)} />
@@ -468,16 +551,16 @@ export default function BorrowerPayments() {
           <div className="space-y-8">
             <div className="p-12 bg-slate-50 border border-slate-100 text-center rounded-3xl relative overflow-hidden">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Payment Amount</p>
-              <h4 className="text-5xl font-bold text-slate-800 tracking-tight">{formatMoney(viewModal.totalCollected)}</h4>
+              <h4 className="text-5xl font-bold text-slate-800 tracking-tight">{formatMoney(viewModal.amount || viewModal.totalCollected)}</h4>
               <div className="mt-5 flex justify-center"><StatusBadge status={viewModal.status} /></div>
             </div>
 
             <div className="grid grid-cols-1 gap-3">
               {[
-                { label: 'Payment Method', value: viewModal.method?.toUpperCase() || 'Bank' },
+                { label: 'Payment Method', value: viewModal.method?.toUpperCase() || 'BANK TRANSFER' },
                 { label: 'Loan Contract', value: `#${viewModal.loanId}` },
-                { label: 'Network REF', value: viewModal.trxId },
-                { label: 'Timestamp', value: formatDateDDMMYYYY(viewModal.createdAt) },
+                { label: 'Network REF', value: viewModal.trxId || viewModal.id || 'N/A' },
+                { label: 'Timestamp', value: formatDateDDMMYYYY(viewModal.date || viewModal.dueDate || viewModal.createdAt) },
               ].map((d, i) => (
                 <div key={i} className="flex justify-between items-center py-4 border-b border-slate-50 last:border-none">
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{d.label}</span>
@@ -499,6 +582,16 @@ export default function BorrowerPayments() {
           </div>
         )}
       </Modal>
+
+      {/* SUCCESS TOAST OVERLAY */}
+      {successToast && (
+        <div className="fixed top-24 right-8 z-[9999] animate-in slide-in-from-top-5 fade-in duration-300 pointer-events-none">
+          <div className="bg-emerald-600 text-white px-8 py-4 rounded-2xl font-black shadow-2xl shadow-emerald-600/30 flex items-center gap-4 text-base border-2 border-emerald-500/50">
+            <CheckCircle2 size={24} className="text-emerald-100 animate-bounce" />
+            <span className="tracking-wide">{successToast}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

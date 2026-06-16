@@ -127,9 +127,6 @@ export default function CommissionTracker() {
         subtitle="10% Interest Commission Analytics & Yield Tracking"
         action={
           <div className="flex items-center gap-3">
-            <Btn variant="outline" onClick={generateDummyPaymentsData} className="italic font-black uppercase tracking-widest text-[9px] rounded-xl !h-12 px-6">
-              Generate Trial Data
-            </Btn>
             {pendingEarnings > 0 && (
               <Btn onClick={() => setIsPayoutModalOpen(true)} className="shadow-lg shadow-primary/20 italic font-black uppercase tracking-widest text-[9px] rounded-xl !h-12 px-6">
                 <Wallet size={14} className="mr-2" /> Request Payout

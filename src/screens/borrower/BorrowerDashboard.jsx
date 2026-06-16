@@ -96,7 +96,9 @@ export default function BorrowerDashboard() {
             </div>
             <div>
               <h4 className="text-sm font-black text-emerald-800 uppercase tracking-wide">Congratulations! Loan fully repaid</h4>
-              <p className="text-xs font-medium text-emerald-600 mt-1">Contract #{loan.id} has been fully settled. Total paid: $1,800. Thank you for your trusted business.</p>
+              <p className="text-xs font-medium text-emerald-600 mt-1">
+                Contract #{loan.id} has been fully settled. Total paid: {formatMoney(Array.isArray(loan.payments) ? loan.payments.reduce((s, p) => s + (p.totalCollected || p.amount || 0), 0) : loan.principalAmount)}. Thank you for your trusted business.
+              </p>
             </div>
           </div>
           <Btn 
