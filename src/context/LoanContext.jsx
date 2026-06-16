@@ -2,12 +2,18 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const STORAGE_KEY = 'loanApplications';
 
+const getOffsetDateString = (offsetDays) => {
+  const d = new Date();
+  d.setDate(d.getDate() + offsetDays);
+  return d.toISOString().split('T')[0];
+};
+
 // Fallback demo data - used only if localStorage is completely empty
 const DEMO_LOANS = [
-  { id: 'LN-8801', user: { name: 'Verified Capital User' }, principalAmount: 5000, duration: 12, status: 'Pending', createdAt: '2024-10-14', interestRate: 10, method: 'CASH', disbursementDate: null, payments: [] },
-  { id: 'LN-8802', user: { name: 'Sarah Williams' }, principalAmount: 8500, duration: 6, status: 'Pending', createdAt: '2024-10-13', interestRate: 10, method: 'BANK_TRANSFER', disbursementDate: null, payments: [] },
-  { id: 'LN-8803', user: { name: 'David Brown' }, principalAmount: 3200, duration: 9, status: 'Active', createdAt: '2024-10-12', interestRate: 12, method: 'CASH', disbursementDate: '2024-10-12', payments: [] },
-  { id: 'LN-8804', user: { name: 'Emma Thompson' }, principalAmount: 12000, duration: 18, status: 'Active', createdAt: '2024-10-10', interestRate: 10, method: 'BANK_TRANSFER', disbursementDate: '2024-10-10', payments: [] },
+  { id: 'LN-8801', user: { name: 'Verified Capital User' }, principalAmount: 5000, remainingPrincipal: 5000, duration: 12, status: 'Pending', createdAt: '2024-10-14', interestRate: 10, method: 'CASH', disbursementDate: null, payments: [] },
+  { id: 'LN-8802', user: { name: 'Sarah Williams' }, principalAmount: 8500, remainingPrincipal: 8500, duration: 6, status: 'Pending', createdAt: '2024-10-13', interestRate: 10, method: 'BANK_TRANSFER', disbursementDate: null, payments: [] },
+  { id: 'LN-8803', user: { name: 'David Brown' }, principalAmount: 3200, remainingPrincipal: 3200, duration: 9, status: 'Active', createdAt: '2024-10-12', interestRate: 12, method: 'CASH', disbursementDate: '2024-10-12', dueDate: getOffsetDateString(0), payments: [] },
+  { id: 'LN-8804', user: { name: 'Emma Thompson' }, principalAmount: 12000, remainingPrincipal: 12000, duration: 18, status: 'Active', createdAt: '2024-10-10', interestRate: 10, method: 'BANK_TRANSFER', disbursementDate: '2024-10-10', dueDate: getOffsetDateString(-3), payments: [] },
 ];
 
 const LoanContext = createContext(null);
@@ -120,8 +126,65 @@ export function LoanProvider({ children }) {
     }));
   };
 
+  const generateDummyPaymentsData = () => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const overdueStr = new Date(Date.now() - 86400000 * 3).toISOString().split('T')[0]; // 3 days overdue
+    const upcomingStr = new Date(Date.now() + 86400000 * 5).toISOString().split('T')[0]; // due in 5 days
+
+    const dummyLoans = [
+      {
+        id: `LN-DUMMY-01`,
+        user: { name: 'John Doe (Trial)' },
+        principalAmount: 10000,
+        remainingPrincipal: 7500,
+        duration: 12,
+        status: 'Active',
+        createdAt: '2026-01-10',
+        interestRate: 8,
+        method: 'BANK_TRANSFER',
+        disbursementDate: '2026-01-10',
+        dueDate: todayStr,
+        payments: []
+      },
+      {
+        id: `LN-DUMMY-02`,
+        user: { name: 'Alice Smith (Trial)' },
+        principalAmount: 15000,
+        remainingPrincipal: 15000,
+        duration: 24,
+        status: 'Active',
+        createdAt: '2026-02-15',
+        interestRate: 10,
+        method: 'CASH',
+        disbursementDate: '2026-02-15',
+        dueDate: overdueStr,
+        payments: []
+      },
+      {
+        id: `LN-DUMMY-03`,
+        user: { name: 'Bob Johnson (Trial)' },
+        principalAmount: 5000,
+        remainingPrincipal: 2500,
+        duration: 6,
+        status: 'Active',
+        createdAt: '2026-03-01',
+        interestRate: 12,
+        method: 'CASH',
+        disbursementDate: '2026-03-01',
+        dueDate: upcomingStr,
+        payments: []
+      }
+    ];
+
+    setLoans(prev => {
+      // Remove any previous dummy loans to avoid duplication
+      const cleaned = prev.filter(l => !l.id.startsWith('LN-DUMMY-'));
+      return [...dummyLoans, ...cleaned];
+    });
+  };
+
   return (
-    <LoanContext.Provider value={{ loans, addLoan, updateLoan, deleteLoan, recordPayment, triggerAutoReminders }}>
+    <LoanContext.Provider value={{ loans, addLoan, updateLoan, deleteLoan, recordPayment, triggerAutoReminders, generateDummyPaymentsData }}>
       {children}
     </LoanContext.Provider>
   );

@@ -14,12 +14,12 @@ function formatMoney(value) {
 }
 
 export default function AdminPayments() {
-  const { loans, recordPayment } = useLoans();
+  const { loans, recordPayment, generateDummyPaymentsData } = useLoans();
   const [search, setSearch] = useState('');
   
   // Filter for Active loans
   const activeLoans = useMemo(() => {
-    return loans.filter(l => l.status === 'active' || l.status === 'APPROVED' || l.status === 'late');
+    return loans.filter(l => l.status?.toLowerCase() === 'active' || l.status === 'APPROVED' || l.status === 'late');
   }, [loans]);
 
   // Due or Overdue Loans
@@ -48,15 +48,17 @@ export default function AdminPayments() {
     const amount = parseFloat(payAmount);
     if (isNaN(amount) || amount <= 0) return null;
 
+    const outstandingPrincipal = paymentModal.remainingPrincipal !== undefined ? paymentModal.remainingPrincipal : paymentModal.principalAmount;
+
     const details = calculateLoanDetails({
       principal: paymentModal.principalAmount,
-      remainingPrincipal: paymentModal.remainingPrincipal,
+      remainingPrincipal: outstandingPrincipal,
       duration: paymentModal.duration,
       interestRate: paymentModal.interestRate || 5
     });
 
     // Assume we calculate against monthly interest
-    const interestDue = details.monthlyInterest || (paymentModal.remainingPrincipal * (paymentModal.interestRate || 5) / 100);
+    const interestDue = details.monthlyInterest || (outstandingPrincipal * (paymentModal.interestRate || 5) / 100);
     
     let scenario = '';
     let color = '';
@@ -82,7 +84,7 @@ export default function AdminPayments() {
       color,
       principalReduction,
       carriedOver,
-      newPrincipal: Math.max(0, paymentModal.remainingPrincipal - principalReduction)
+      newPrincipal: Math.max(0, outstandingPrincipal - principalReduction)
     };
   }, [paymentModal, payAmount]);
 
@@ -124,11 +126,33 @@ export default function AdminPayments() {
                 onChange={e => setSearch(e.target.value)}
              />
           </div>
+          <div>
+            <Btn 
+              variant="outline" 
+              onClick={generateDummyPaymentsData}
+              className="flex items-center gap-2"
+            >
+              <Database size={14} /> Generate Trial Data
+            </Btn>
+          </div>
         </div>
 
         {filteredLoans.length === 0 ? (
-          <div className="pro-card p-10 text-center text-slate-400 font-bold">
-            No loans are currently due or overdue!
+          <div className="pro-card p-10 text-center flex flex-col items-center justify-center space-y-4 border border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
+            <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-450">
+              <Database size={24} />
+            </div>
+            <div>
+              <p className="text-slate-700 font-bold text-sm">No loans are currently due or overdue!</p>
+              <p className="text-slate-400 text-xs mt-1">To trial/test the payments flow, generate sample trial data.</p>
+            </div>
+            <Btn 
+              onClick={generateDummyPaymentsData}
+              className="mt-2 flex items-center gap-2 shadow-lg shadow-primary/20"
+              size="sm"
+            >
+              <Zap size={14} /> Populate Trial Data
+            </Btn>
           </div>
         ) : (
           <ProTable headers={[
@@ -139,13 +163,14 @@ export default function AdminPayments() {
             { label: 'Action', className: 'text-right' }
           ]}>
             {filteredLoans.map((l) => {
+              const outstandingPrincipal = l.remainingPrincipal !== undefined ? l.remainingPrincipal : l.principalAmount;
               const details = calculateLoanDetails({
                 principal: l.principalAmount,
-                remainingPrincipal: l.remainingPrincipal,
+                remainingPrincipal: outstandingPrincipal,
                 duration: l.duration,
                 interestRate: l.interestRate || 5
               });
-              const interestDue = details.monthlyInterest || (l.remainingPrincipal * (l.interestRate || 5) / 100);
+              const interestDue = details.monthlyInterest || (outstandingPrincipal * (l.interestRate || 5) / 100);
               const counter = getDueDateCounter(l.dueDate);
 
               return (
@@ -162,7 +187,7 @@ export default function AdminPayments() {
                     </div>
                   </td>
                   <td className="px-6 py-5">
-                    <p className="text-[13px] font-bold text-slate-900">{formatMoney(l.remainingPrincipal)}</p>
+                    <p className="text-[13px] font-bold text-slate-900">{formatMoney(outstandingPrincipal)}</p>
                   </td>
                   <td className="px-6 py-5">
                     <p className="text-[13px] font-bold text-slate-900">{formatDateDDMMYYYY(l.dueDate)}</p>
@@ -183,13 +208,14 @@ export default function AdminPayments() {
 
       <Modal isOpen={!!paymentModal} onClose={() => setPaymentModal(null)} title="Payment Receiving Modal">
         {paymentModal && (() => {
+          const outstandingPrincipal = paymentModal.remainingPrincipal !== undefined ? paymentModal.remainingPrincipal : paymentModal.principalAmount;
           const details = calculateLoanDetails({
             principal: paymentModal.principalAmount,
-            remainingPrincipal: paymentModal.remainingPrincipal,
+            remainingPrincipal: outstandingPrincipal,
             duration: paymentModal.duration,
             interestRate: paymentModal.interestRate || 5
           });
-          const interestDue = details.monthlyInterest || (paymentModal.remainingPrincipal * (paymentModal.interestRate || 5) / 100);
+          const interestDue = details.monthlyInterest || (outstandingPrincipal * (paymentModal.interestRate || 5) / 100);
 
           return (
             <div className="space-y-6">
@@ -200,7 +226,7 @@ export default function AdminPayments() {
                  </div>
                  <div className="text-right">
                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Current Principal</p>
-                   <p className="text-sm font-bold text-slate-900">{formatMoney(paymentModal.remainingPrincipal)}</p>
+                   <p className="text-sm font-bold text-slate-900">{formatMoney(outstandingPrincipal)}</p>
                  </div>
               </div>
 
@@ -232,7 +258,7 @@ export default function AdminPayments() {
 
                   {paymentAnalysis.scenario === 'EXACT PAYMENT' && (
                     <p className="text-xs font-bold text-slate-600">
-                      Borrower is paying exactly the interest amount. Principal remains at <span className="text-slate-900">{formatMoney(paymentModal.remainingPrincipal)}</span>.
+                      Borrower is paying exactly the interest amount. Principal remains at <span className="text-slate-900">{formatMoney(outstandingPrincipal)}</span>.
                     </p>
                   )}
 
@@ -243,7 +269,7 @@ export default function AdminPayments() {
                         <span>Shortfall (Carried Over)</span>
                         <span>{formatMoney(paymentAnalysis.carriedOver)}</span>
                       </div>
-                      <p>Principal remains at <span className="text-slate-900">{formatMoney(paymentModal.remainingPrincipal)}</span>.</p>
+                      <p>Principal remains at <span className="text-slate-900">{formatMoney(outstandingPrincipal)}</span>.</p>
                     </div>
                   )}
 
