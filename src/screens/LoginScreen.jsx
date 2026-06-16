@@ -7,9 +7,11 @@ import {
   EyeOff, 
   ChevronRight,
   ShieldAlert,
-  Landmark
+  Landmark,
+  CheckCircle2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { Modal, Btn } from '../components/UI';
 
 const DEMO_ROLES = [
   { label: 'Administrator', role: 'admin', email: 'admin@arkad.com', portal: 'admin' },
@@ -26,6 +28,7 @@ export default function LoginScreen({ isAdminPortal = false }) {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
 
   // Filter roles based on portal type
   // Show all roles as it's now a unified portal
@@ -112,7 +115,16 @@ export default function LoginScreen({ isAdminPortal = false }) {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Password</label>
+              <div className="flex justify-between items-center ml-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Password</label>
+                <button 
+                  type="button" 
+                  onClick={() => setShowResetModal(true)}
+                  className="text-[9px] font-bold text-[#0a3d62] hover:underline uppercase tracking-widest"
+                >
+                  Forgot Password?
+                </button>
+              </div>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                 <input 
@@ -178,6 +190,25 @@ export default function LoginScreen({ isAdminPortal = false }) {
           </div>
         </div>
       </div>
+
+      <Modal isOpen={showResetModal} onClose={() => setShowResetModal(false)} title="Reset Password Access">
+        <div className="space-y-4 text-left p-2">
+          <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center text-white">
+              <CheckCircle2 size={18} />
+            </div>
+            <div>
+              <p className="text-xs font-black uppercase tracking-wider text-emerald-800">Instructions Dispatched</p>
+              <p className="text-[10px] font-bold text-emerald-600 mt-0.5">A password reset link has been simulated. Please check your inbox.</p>
+            </div>
+          </div>
+          <div className="flex justify-end pt-2">
+            <Btn onClick={() => setShowResetModal(false)} className="!h-10 text-[9px] uppercase font-black tracking-widest px-6 rounded-xl">
+              Close Registry
+            </Btn>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
