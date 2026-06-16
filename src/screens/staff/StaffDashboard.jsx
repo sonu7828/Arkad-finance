@@ -41,6 +41,28 @@ export default function StaffDashboard() {
     alert('Pickup confirmed. Loan successfully disbursed!');
   };
 
+  const downloadCollectionCSV = () => {
+    const headers = ['Loan ID', 'Borrower Name', 'Principal Amount', 'Status', 'Duration', 'Due Date'];
+    const rows = allLoans.map(l => [
+      l.id,
+      l.user?.name || 'N/A',
+      l.principalAmount || 0,
+      l.status,
+      l.duration || 0,
+      l.dueDate || 'N/A'
+    ]);
+
+    const csvContent = "\uFEFF" + [headers.join(','), ...rows.map(e => e.map(val => `"${val}"`).join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `collection_summary_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 10 }}
@@ -182,7 +204,7 @@ export default function StaffDashboard() {
                  </div>
                  <h5 className="text-sm font-bold">End of Day Report</h5>
                  <p className="text-[10px] text-slate-400 uppercase tracking-widest">Generate current collection summary</p>
-                 <Btn variant="outline" size="sm" className="w-full !border-white/20 !text-white hover:!bg-white/10">Download CSV</Btn>
+                 <Btn variant="outline" size="sm" onClick={downloadCollectionCSV} className="w-full !bg-transparent !border-white/20 !text-white hover:!bg-white/10">Download CSV</Btn>
               </div>
            </div>
         </div>

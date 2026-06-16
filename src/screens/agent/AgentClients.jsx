@@ -16,10 +16,10 @@ function formatMoney(value) {
 
 export default function AgentClients() {
   const navigate = useNavigate();
-  const { loans } = useLoans();
+  const { loans, generateDummyPaymentsData } = useLoans();
   
   // We'll consider loans with an agent assigned as "our clients" for demo purposes
-  const agentLoans = useMemo(() => loans.filter(l => l.status === 'active' || l.status === 'late'), [loans]);
+  const agentLoans = useMemo(() => loans.filter(l => l.status?.toLowerCase() === 'active' || l.status?.toLowerCase() === 'late'), [loans]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedClient, setSelectedClient] = useState(null);
@@ -86,6 +86,9 @@ export default function AgentClients() {
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mt-1 italic">Authorized Agent Client Portfolio</p>
         </div>
         <div className="flex items-center gap-3">
+          <Btn variant="outline" size="sm" onClick={generateDummyPaymentsData} className="rounded-xl italic flex items-center gap-2">
+            <Plus size={14} /> Generate Trial Data
+          </Btn>
           <Btn variant="outline" size="sm" onClick={handleExport} className="rounded-xl italic">
             <DownloadIcon size={14} className="mr-2" /> Export
           </Btn>
@@ -236,8 +239,27 @@ export default function AgentClients() {
         )}
       </Modal>
 
-      {filteredClients.length === 0 && (
-        <EmptyState icon={Briefcase} title="Registry Empty" description="No network members match your search parameters." />
+      {agentLoans.length === 0 ? (
+        <div className="pro-card p-10 text-center flex flex-col items-center justify-center space-y-4 border border-dashed border-slate-200 rounded-[2rem] bg-slate-50/50">
+          <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+            <Users size={24} />
+          </div>
+          <div>
+            <p className="text-slate-700 font-bold text-sm">No clients are currently registered in your network!</p>
+            <p className="text-slate-400 text-xs mt-1">To trial/test the Network Registry features, generate sample trial data.</p>
+          </div>
+          <Btn 
+            onClick={generateDummyPaymentsData}
+            className="mt-2 flex items-center gap-2 shadow-lg shadow-primary/20 rounded-xl"
+            size="sm"
+          >
+            <Plus size={14} /> Populate Trial Network
+          </Btn>
+        </div>
+      ) : (
+        filteredClients.length === 0 && (
+          <EmptyState icon={Briefcase} title="Registry Empty" description="No network members match your search parameters." />
+        )
       )}
     </div>
   );

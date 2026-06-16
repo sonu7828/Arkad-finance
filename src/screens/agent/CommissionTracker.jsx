@@ -21,7 +21,7 @@ function formatMoney(value) {
 
 export default function CommissionTracker() {
   const navigate = useNavigate();
-  const { loans } = useLoans();
+  const { loans, generateDummyPaymentsData } = useLoans();
   const historySectionRef = useRef(null);
 
   // Derive Commissions from Loans
@@ -126,11 +126,16 @@ export default function CommissionTracker() {
         title="Yield Intelligence" 
         subtitle="10% Interest Commission Analytics & Yield Tracking"
         action={
-          pendingEarnings > 0 && (
-            <Btn onClick={() => setIsPayoutModalOpen(true)} className="shadow-lg shadow-primary/20 italic font-black uppercase tracking-widest text-[9px] rounded-xl !h-12 px-6">
-              <Wallet size={14} className="mr-2" /> Request Payout
+          <div className="flex items-center gap-3">
+            <Btn variant="outline" onClick={generateDummyPaymentsData} className="italic font-black uppercase tracking-widest text-[9px] rounded-xl !h-12 px-6">
+              Generate Trial Data
             </Btn>
-          )
+            {pendingEarnings > 0 && (
+              <Btn onClick={() => setIsPayoutModalOpen(true)} className="shadow-lg shadow-primary/20 italic font-black uppercase tracking-widest text-[9px] rounded-xl !h-12 px-6">
+                <Wallet size={14} className="mr-2" /> Request Payout
+              </Btn>
+            )}
+          </div>
         }
       />
 
@@ -185,11 +190,24 @@ export default function CommissionTracker() {
                  ))}
               </div>
            </div>
-           {history.length === 0 ? (
-             <div className="p-8 text-center bg-slate-50 border border-slate-100 rounded-2xl">
-               <p className="text-sm font-bold text-slate-400">No commissions recorded yet.</p>
-             </div>
-           ) : (
+            {history.length === 0 ? (
+              <div className="p-8 text-center bg-slate-50 border border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center space-y-4">
+                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                  <DollarSign size={20} />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-slate-700">No commissions recorded yet.</p>
+                  <p className="text-xs text-slate-400 mt-1">To trial commission tracking and payout requests, generate dummy data.</p>
+                </div>
+                <Btn 
+                  onClick={generateDummyPaymentsData}
+                  className="mt-1 flex items-center gap-2 shadow-sm rounded-lg"
+                  size="sm"
+                >
+                  Populate Trial Commissions
+                </Btn>
+              </div>
+            ) : (
              <ProTable 
                 columns={historyColumns} 
                 data={history.filter(c => filterStatus === 'all' ? true : filterStatus === 'paid' ? c.status === 'PAID' : c.status !== 'PAID')} 
