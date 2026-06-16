@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import {
   CheckCircle2, Clock, Search, DollarSign, ArrowRight, Activity,
-  TrendingUp, Receipt, RotateCcw, ShieldCheck, X, Plus, FileUp
+  TrendingUp, Receipt, RotateCcw, ShieldCheck, X, Plus, FileUp, Calendar
 } from 'lucide-react';
 import { PageTitle, StatCard, ProTable, Modal, Btn, StatusBadge, FormField, Input } from '../../components/UI';
 import { formatDateDDMMYYYY } from '../../utils/dateUtils';
@@ -15,7 +15,7 @@ function formatMoney(value) {
 
 export default function BorrowerPayments() {
   const { user } = useAuth();
-  const { loans: globalLoans } = useLoans();
+  const { loans: globalLoans, generateDummyPaymentsData } = useLoans();
 
   // ── Get current borrower's loans from real context ──────────────────────
   const myLoans = useMemo(() => {
@@ -195,9 +195,14 @@ export default function BorrowerPayments() {
         title="Repayment Hub"
         subtitle="Manage your active liabilities and track historical transaction receipts."
         action={
-          <Btn onClick={() => setShowPayModal(true)} className="shadow-xl shadow-primary/20">
-            <Plus size={16} className="mr-2" /> Make Payment
-          </Btn>
+          <div className="flex items-center gap-3">
+            <Btn variant="outline" onClick={generateDummyPaymentsData} className="italic font-black uppercase tracking-widest text-[9px] rounded-xl !h-12 px-6">
+              Generate Trial Data
+            </Btn>
+            <Btn onClick={() => setShowPayModal(true)} className="shadow-xl shadow-primary/20 italic font-black uppercase tracking-widest text-[9px] rounded-xl !h-12 px-6">
+              <Plus size={16} className="mr-2" /> Make Payment
+            </Btn>
+          </div>
         }
       />
 
@@ -233,8 +238,21 @@ export default function BorrowerPayments() {
         </div>
 
         {debtBreakdown.length === 0 ? (
-          <div className="pro-card p-10 text-center text-slate-400 text-sm font-bold">
-            No active loan contracts found.
+          <div className="pro-card p-10 text-center flex flex-col items-center justify-center space-y-4 border border-dashed border-slate-200 rounded-[2rem] bg-slate-50/50">
+            <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+              <DollarSign size={24} />
+            </div>
+            <div>
+              <p className="text-slate-700 font-bold text-sm">No active loan contracts found.</p>
+              <p className="text-slate-400 text-xs mt-1">To trial/test making payments and viewing receipt history, generate trial data.</p>
+            </div>
+            <Btn 
+              onClick={generateDummyPaymentsData}
+              className="mt-2 flex items-center gap-2 shadow-lg shadow-primary/20 rounded-xl"
+              size="sm"
+            >
+              <Plus size={14} /> Populate Trial Repayment Data
+            </Btn>
           </div>
         ) : (
           <div className="flex overflow-x-auto gap-6 pb-4 px-2 no-scrollbar snap-x snap-mandatory">

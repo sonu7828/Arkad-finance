@@ -144,7 +144,10 @@ export function LoanProvider({ children }) {
         method: 'BANK_TRANSFER',
         disbursementDate: '2026-01-10',
         dueDate: todayStr,
-        payments: []
+        unpaidInterest: 1500,
+        payments: [
+          { id: 'PAY-D-01', date: '2026-05-10', amount: 800, type: 'interest', totalCollected: 800, baseAmount: 800 }
+        ]
       },
       {
         id: `LN-DUMMY-02`,
@@ -158,7 +161,10 @@ export function LoanProvider({ children }) {
         method: 'CASH',
         disbursementDate: '2026-02-15',
         dueDate: overdueStr,
-        payments: []
+        unpaidInterest: 3000,
+        payments: [
+          { id: 'PAY-D-02', date: '2026-05-15', amount: 1500, type: 'interest', totalCollected: 1500, baseAmount: 1500 }
+        ]
       },
       {
         id: `LN-DUMMY-03`,
@@ -172,7 +178,25 @@ export function LoanProvider({ children }) {
         method: 'CASH',
         disbursementDate: '2026-03-01',
         dueDate: upcomingStr,
+        unpaidInterest: 600,
         payments: []
+      },
+      {
+        id: `LN-DUMMY-04`,
+        user: { name: 'Verified Capital User', email: 'borrower@arkad.com' },
+        principalAmount: 7500,
+        remainingPrincipal: 6000,
+        duration: 12,
+        status: 'Active',
+        createdAt: '2026-04-10',
+        interestRate: 10,
+        method: 'BANK_TRANSFER',
+        disbursementDate: '2026-04-10',
+        dueDate: todayStr,
+        unpaidInterest: 750,
+        payments: [
+          { id: 'PAY-D-04', date: '2026-05-10', amount: 750, type: 'interest', totalCollected: 750, baseAmount: 750 }
+        ]
       }
     ];
 

@@ -32,6 +32,15 @@ const LOAN_DURATION_OPTIONS = [3, 6, 12, 24, 36].map((m) => ({
   label: `${m} Months`,
 }));
 
+const LOAN_AMOUNT_OPTIONS = [
+  { value: '1000', label: 'MXN $1,000' },
+  { value: '2000', label: 'MXN $2,000' },
+  { value: '5000', label: 'MXN $5,000' },
+  { value: '10000', label: 'MXN $10,000' },
+  { value: '20000', label: 'MXN $20,000' },
+  { value: '50000', label: 'MXN $50,000' },
+];
+
 function formatMoney(value) {
   return `MXN $${Number(value || 0).toLocaleString()}`;
 }
