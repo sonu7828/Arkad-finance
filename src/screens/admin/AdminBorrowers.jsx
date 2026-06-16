@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   Users, ShieldCheck, AlertTriangle, Search, User, Trash2, Pencil, Phone, 
   Calendar, MapPin, Activity, Database, Filter, UserPlus, ArrowRight, 
-  ChevronRight, Hash, Sparkles, Zap
+  ChevronRight, Hash, Sparkles, Zap, CheckCircle2
 } from 'lucide-react';
 import { Btn, PageTitle, StatusBadge, StatCard, Input, Select, ProTable, Modal, FormField, Divider } from '../../components/UI';
 import { formatDateDDMMYYYY } from '../../utils/dateUtils';
@@ -40,8 +41,28 @@ export default function AdminBorrowers() {
   const [riskFilter, setRiskFilter] = useState('ALL');
   const [viewModal, setViewModal] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [kycModal, setKycModal] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', phone: '', nrc: '', dob: '', address: '', password: 'Password123!', risk: 'GREEN' });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [kycStatus, setKycStatus] = useState(localStorage.getItem('kycStatus') || 'missing');
+  const [toastMsg, setToastMsg] = useState('');
+
+  const showToast = (msg) => {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(''), 3000);
+  };
+
+  React.useEffect(() => {
+    // Poll for changes since localStorage events don't fire in the same tab, 
+    // and sometimes react doesn't catch them across fast switches.
+    const interval = setInterval(() => {
+      const current = localStorage.getItem('kycStatus') || 'missing';
+      if (current !== kycStatus) {
+        setKycStatus(current);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [kycStatus]);
 
   const filtered = useMemo(() => {
     return borrowers.filter(b => {
@@ -95,6 +116,23 @@ export default function AdminBorrowers() {
           <StatCard label="Critical Risk" value={borrowers.filter(b => b.risk === 'RED').length} icon={AlertTriangle} color="text-rose-500" />
         </button>
       </section>
+
+      {kycStatus === 'pending_admin_review' && (
+        <div className="pro-card p-6 border border-amber-200 bg-amber-50 flex flex-col sm:flex-row items-center justify-between gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
+          <div className="flex items-center gap-4 text-center sm:text-left">
+             <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center shrink-0 mx-auto sm:mx-0">
+                <AlertTriangle size={24} />
+             </div>
+             <div>
+                <h3 className="text-base font-bold text-amber-900 tracking-tight">Pending KYC Approval</h3>
+                <p className="text-xs font-medium text-amber-700 mt-0.5">A borrower has uploaded identity documents. Review required.</p>
+             </div>
+          </div>
+          <Btn onClick={() => setKycModal(true)} className="!bg-amber-500 hover:!bg-amber-600 text-white border-none shadow-lg shadow-amber-500/20 whitespace-nowrap w-full sm:w-auto">
+             Review Documents
+          </Btn>
+        </div>
+      )}
 
       <div className="space-y-6">
         <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 px-1">
@@ -246,6 +284,63 @@ export default function AdminBorrowers() {
         )}
       </Modal>
 
+      <Modal isOpen={kycModal} onClose={() => setKycModal(false)} title="KYC Document Verification">
+        <div className="space-y-6">
+           <p className="text-xs font-medium text-slate-500">Please review the uploaded identity documents before approving this borrower's KYC status.</p>
+           
+           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">ID Front</p>
+                 <div className="w-full h-32 bg-slate-100 rounded-xl border-2 border-dashed border-slate-200 flex items-center justify-center relative overflow-hidden group">
+                    <img src="https://images.unsplash.com/photo-1633265486064-086b219458ce?auto=format&fit=crop&q=80&w=400&h=250" alt="ID Front" className="w-full h-full object-cover opacity-80 mix-blend-multiply" />
+                    <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                       <Btn size="sm" className="!bg-white !text-slate-900">View Full</Btn>
+                    </div>
+                 </div>
+              </div>
+              <div className="space-y-2">
+                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">ID Back</p>
+                 <div className="w-full h-32 bg-slate-100 rounded-xl border-2 border-dashed border-slate-200 flex items-center justify-center relative overflow-hidden group">
+                    <img src="https://images.unsplash.com/photo-1633265486064-086b219458ce?auto=format&fit=crop&q=80&w=400&h=250" alt="ID Back" className="w-full h-full object-cover opacity-80 mix-blend-multiply" />
+                    <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                       <Btn size="sm" className="!bg-white !text-slate-900">View Full</Btn>
+                    </div>
+                 </div>
+              </div>
+              <div className="space-y-2">
+                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Proof of Address</p>
+                 <div className="w-full h-32 bg-slate-100 rounded-xl border-2 border-dashed border-slate-200 flex items-center justify-center relative overflow-hidden group">
+                    <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm">
+                       <Database className="text-slate-400" size={20} />
+                    </div>
+                    <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                       <Btn size="sm" className="!bg-white !text-slate-900">View PDF</Btn>
+                    </div>
+                 </div>
+              </div>
+              <div className="space-y-2">
+                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Selfie Verification</p>
+                 <div className="w-full h-32 bg-slate-100 rounded-xl border-2 border-dashed border-slate-200 flex items-center justify-center relative overflow-hidden group">
+                    <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=250&h=250" alt="Selfie" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                       <Btn size="sm" className="!bg-white !text-slate-900">View Full</Btn>
+                    </div>
+                 </div>
+              </div>
+           </div>
+
+           <div className="flex gap-4 pt-4">
+              <Btn variant="outline" className="flex-1" onClick={() => setKycModal(false)}>Reject</Btn>
+              <Btn className="flex-[2] !bg-emerald-500 hover:!bg-emerald-600 shadow-lg shadow-emerald-500/20" onClick={() => {
+                 localStorage.setItem('kycStatus', 'verified');
+                 setRiskFilter(prev => prev);
+                 setKycModal(false);
+                 showToast('KYC Verified. The borrower can now apply for loans.');
+              }}>Approve Documents</Btn>
+           </div>
+        </div>
+      </Modal>
+
       <Modal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} title="Onboard New Borrower">
          <form onSubmit={handleAddBorrower} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -285,6 +380,17 @@ export default function AdminBorrowers() {
             </div>
          </form>
       </Modal>
+
+      {/* Modern Toast */}
+      {toastMsg && createPortal(
+        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100000005] animate-in slide-in-from-bottom-10">
+          <div className="bg-slate-900 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 min-w-[300px]">
+            <CheckCircle2 className="text-emerald-400" size={24} />
+            <span className="text-sm font-bold tracking-tight">{toastMsg}</span>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

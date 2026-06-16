@@ -52,10 +52,10 @@ export default function AdminLayout() {
           </div>
 
           <div className="flex items-center gap-2 md:gap-4">
-            <button className="hidden sm:flex w-9 h-9 items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-primary hover:border-primary/20 transition-all relative">
+            <Link to="/admin/notifications" className="hidden sm:flex w-9 h-9 items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-primary hover:border-primary/20 transition-all relative">
               <Bell size={18} />
               <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white" />
-            </button>
+            </Link>
 
             <div className="w-px h-6 bg-slate-200 hidden sm:block mx-1" />
 

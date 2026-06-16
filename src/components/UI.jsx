@@ -196,10 +196,10 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }) {
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[100000000] flex items-start sm:items-center justify-center p-4 sm:p-6 overflow-y-auto py-8 sm:py-12">
-      {/* Solid Pure Black Overlay */}
+    <div className="fixed inset-0 z-[100000000] flex items-center justify-center p-4 sm:p-6">
+      {/* Blurred Backdrop */}
       <div 
-        className="fixed inset-0 bg-[#000000] z-[100000001]" 
+        className="fixed inset-0 bg-slate-900/30 backdrop-blur-md z-[100000001]" 
         onClick={onClose} 
       />
       
@@ -208,11 +208,11 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }) {
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className={`bg-white rounded-[2rem] sm:rounded-[2.5rem] relative w-full ${sizes[size]} z-[100000002] flex flex-col max-h-[90vh] shadow-2xl my-auto shadow-black/20`}
+        className={`bg-white rounded-[2rem] sm:rounded-[2.5rem] relative w-full ${sizes[size]} z-[100000002] flex flex-col max-h-[90vh] md:max-h-[85vh] shadow-2xl shadow-slate-900/20 overflow-hidden`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header with persistent Close Button */}
-        <div className="flex items-center justify-between px-6 sm:px-10 py-5 border-b border-slate-50 bg-white shrink-0">
+        <div className="flex items-center justify-between px-6 sm:px-10 py-5 border-b border-slate-100 bg-white shrink-0 rounded-t-[2rem] sm:rounded-t-[2.5rem]">
           <h3 className="text-[10px] sm:text-[11px] font-black text-slate-900 uppercase tracking-widest italic truncate pr-4">
             {title || 'Information Overview'}
           </h3>
@@ -225,7 +225,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }) {
         </div>
 
         {/* Scrollable Content Area */}
-        <div className="p-6 sm:p-10 overflow-y-auto custom-scrollbar-minimal">
+        <div className="p-6 sm:p-10 overflow-y-auto custom-scrollbar-minimal flex-1">
           {children}
         </div>
       </motion.div>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { 
@@ -45,7 +46,17 @@ export default function BorrowerProfile() {
   const [toastMsg, setToastMsg] = useState('');
   const [editModal, setEditModal] = useState(false);
   const [kycModal, setKycModal] = useState(false);
-  const [kycStatus, setKycStatus] = useState(localStorage.getItem('kycStatus') || 'missing'); // 'missing', 'pending_admin_review', 'verified'
+  const [kycStatus, setKycStatus] = useState(localStorage.getItem('kycStatus') || 'missing');
+
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      const current = localStorage.getItem('kycStatus') || 'missing';
+      if (current !== kycStatus) {
+        setKycStatus(current);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [kycStatus]);
   const profileImageStorageKey = `profile-photo:${user?.id || 'borrower'}`;
   const [profilePhoto, setProfilePhoto] = useState(() => loadSavedImage(profileImageStorageKey));
   const [form, setForm] = useState({
@@ -179,19 +190,30 @@ export default function BorrowerProfile() {
                  </div>
               </div>
 
-              <div className="p-5 bg-amber-50/40 border border-amber-100/50 rounded-2xl flex items-center justify-between group hover:bg-amber-50 transition-colors">
+               <div className="p-5 bg-amber-50/40 border border-amber-100/50 rounded-2xl flex items-center justify-between group hover:bg-amber-50 transition-colors">
                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${kycStatus === 'verified' ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}`}>
                        <Activity size={20} />
                     </div>
                     <div>
                        <p className="text-xs font-bold text-slate-800 mb-0.5 tracking-tight">KYC Registry</p>
-                       <p className={`text-[10px] font-bold uppercase tracking-widest opacity-80 ${kycStatus === 'pending_admin_review' ? 'text-blue-600' : 'text-amber-600'}`}>
-                         {kycStatus === 'pending_admin_review' ? 'Under Review' : 'Action Required'}
+                       <p className={`text-[10px] font-bold uppercase tracking-widest opacity-80 ${kycStatus === 'pending_admin_review' ? 'text-blue-600' : kycStatus === 'verified' ? 'text-emerald-600' : 'text-amber-600'}`}>
+                         {kycStatus === 'pending_admin_review' ? 'Under Review' : kycStatus === 'verified' ? 'Verified' : 'Action Required'}
                        </p>
+                       {kycStatus !== 'missing' && (
+                         <button 
+                           onClick={() => {
+                             localStorage.removeItem('kycStatus');
+                             setKycStatus('missing');
+                           }}
+                           className="text-[8px] font-bold text-slate-400 hover:text-rose-500 underline uppercase tracking-widest mt-1"
+                         >
+                           Reset Demo Flow
+                         </button>
+                       )}
                     </div>
                  </div>
-                 {kycStatus === 'missing' && (
+                 {kycStatus !== 'pending_admin_review' && kycStatus !== 'verified' && (
                    <Btn variant="ghost" size="sm" className="!text-[9px] !px-4 !bg-white/50 hover:!bg-white shadow-sm !rounded-lg" onClick={() => setKycModal(true)}>Upload Docs</Btn>
                  )}
               </div>
@@ -253,7 +275,7 @@ export default function BorrowerProfile() {
         <div className="space-y-6">
           <p className="text-xs text-slate-500 font-medium">Please upload clear photos of your documents to complete your verification.</p>
           
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <FormField label="1. ID Front Photo">
               <label className="w-full h-16 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary transition-colors cursor-pointer bg-slate-50 relative overflow-hidden">
                 <input type="file" className="hidden" onChange={(e) => setKycFiles(f => ({...f, idFront: e.target.files?.[0]}))} />
@@ -302,13 +324,14 @@ export default function BorrowerProfile() {
       </Modal>
 
       {/* Modern Toast */}
-      {toastMsg && (
-        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-10">
+      {toastMsg && createPortal(
+        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100000005] animate-in slide-in-from-bottom-10">
           <div className="bg-slate-900 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 min-w-[300px]">
             <CheckCircle2 className="text-emerald-400" size={24} />
             <span className="text-sm font-bold tracking-tight">{toastMsg}</span>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
