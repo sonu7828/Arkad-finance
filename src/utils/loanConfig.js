@@ -5,9 +5,9 @@ const PIPELINE_KEY = 'pipeline_applications';
 const DEFAULT_SETTINGS = {
   interestRate: 10,
   graceDays: 3,
-  agentCommission: 5,
-  delinquentInterestRate: 15,
-  initiationFee: 500,
+  agentCommission: 10,
+  delinquentInterestRate: 12,
+  initiationFee: 3,
   minLoanDuration: 1,
   minLoanAmount: 500,
 };

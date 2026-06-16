@@ -474,10 +474,10 @@ export default function AdminLoans() {
                
                {/* KYC Documents Display */}
                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 text-left">
-                  <div className="p-3 bg-white border border-slate-100 rounded-xl flex flex-col items-center justify-center text-center">
-                    <ShieldCheck size={20} className="text-emerald-500 mb-2" />
-                    <span className="text-[9px] font-bold uppercase text-slate-500">ID Type</span>
-                    <span className="text-xs font-bold text-slate-900">National ID</span>
+                  <div className="p-3 bg-white border border-slate-100 rounded-xl flex flex-col items-center justify-center text-center cursor-pointer hover:border-primary transition-colors">
+                    <FileText size={20} className="text-primary mb-2" />
+                    <span className="text-[9px] font-bold uppercase text-slate-500">Selfie</span>
+                    <span className="text-[10px] font-bold text-primary mt-1">View Doc</span>
                   </div>
                   <div className="p-3 bg-white border border-slate-100 rounded-xl flex flex-col items-center justify-center text-center cursor-pointer hover:border-primary transition-colors">
                     <FileText size={20} className="text-primary mb-2" />

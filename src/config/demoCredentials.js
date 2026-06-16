@@ -18,8 +18,8 @@ export function demoPasswordForRole(role) {
 }
 
 export const QUICK_ACCESS_BY_ROLE = {
-  admin: { email: 'admin@lendanet.com' },
-  staff: { email: 'staff@lendanet.com' },
+  admin: { email: 'admin@arkadfinance.com' },
+  staff: { email: 'staff@arkadfinance.com' },
   agent: { email: 'demoagent@gmail.com' },
   borrower: { email: 'demo@gmail.com' },
 };

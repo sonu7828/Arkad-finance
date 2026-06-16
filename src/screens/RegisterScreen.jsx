@@ -15,7 +15,7 @@ export default function RegisterScreen({ fixedRole }) {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [form, setForm] = useState({
-    name: '', email: '', password: '', role: fixedRole || 'BORROWER'
+    name: '', phone: '', agentCode: '', role: fixedRole || 'BORROWER'
   });
 
   const update = (key, val) => setForm(f => ({ ...f, [key]: val }));
@@ -24,7 +24,15 @@ export default function RegisterScreen({ fixedRole }) {
     e.preventDefault();
     setLoading(true);
     setError('');
-    const res = await register(form);
+    
+    // Map phone to email/password to integrate with existing AuthContext
+    const finalForm = {
+      ...form,
+      email: form.phone ? `${form.phone.replace(/\s+/g, '')}@wa.me` : '',
+      password: 'arkad123'
+    };
+    
+    const res = await register(finalForm);
     
     if (res.success) {
       // Automatic CRM Lead Generation
@@ -35,7 +43,7 @@ export default function RegisterScreen({ fixedRole }) {
         const newLead = {
           id: `L-AUTO-${Date.now()}`,
           name: form.name,
-          email: form.email,
+          email: finalForm.email,
           phone: form.phone || 'Not provided',
           status: 'NEW SIGNUP',
           lastContact: new Date().toISOString().split('T')[0],
@@ -145,35 +153,6 @@ export default function RegisterScreen({ fixedRole }) {
                       value={form.agentCode || ''}
                       onChange={e => update('agentCode', e.target.value)}
                     />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Email Address</label>
-                    <input 
-                      className="w-full h-12 px-4 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:border-[#0a3d62] transition-all"
-                      type="email"
-                      placeholder="name@example.com"
-                      value={form.email}
-                      onChange={e => update('email', e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Password</label>
-                    <div className="relative">
-                      <input 
-                        className="w-full h-12 px-4 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:border-[#0a3d62] transition-all"
-                        type={showPass ? 'text' : 'password'}
-                        placeholder="••••••••"
-                        value={form.password}
-                        onChange={e => update('password', e.target.value)}
-                        required
-                      />
-                      <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                        {showPass ? <EyeOff size={16}/> : <Eye size={16}/>}
-                      </button>
-                    </div>
                   </div>
                 </div>
 

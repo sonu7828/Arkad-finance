@@ -45,7 +45,7 @@ export default function BorrowerProfile() {
   const [toastMsg, setToastMsg] = useState('');
   const [editModal, setEditModal] = useState(false);
   const [kycModal, setKycModal] = useState(false);
-  const [kycStatus, setKycStatus] = useState('missing'); // 'missing', 'pending_admin_review', 'verified'
+  const [kycStatus, setKycStatus] = useState(localStorage.getItem('kycStatus') || 'missing'); // 'missing', 'pending_admin_review', 'verified'
   const profileImageStorageKey = `profile-photo:${user?.id || 'borrower'}`;
   const [profilePhoto, setProfilePhoto] = useState(() => loadSavedImage(profileImageStorageKey));
   const [form, setForm] = useState({
@@ -248,27 +248,25 @@ export default function BorrowerProfile() {
           <p className="text-xs text-slate-500 font-medium">Please upload clear photos of your documents to complete your verification.</p>
           
           <div className="space-y-4">
-            <FormField label="1. ID Document Type">
-              <select className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:outline-none focus:border-primary">
-                <option>National ID</option>
-                <option>Passport</option>
-                <option>Driver's License</option>
-              </select>
-            </FormField>
-            
-            <FormField label="2. ID Front Photo">
+            <FormField label="1. ID Front Photo">
               <div className="w-full h-16 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary transition-colors cursor-pointer bg-slate-50">
                 <Upload size={18} className="mr-2" /> <span className="text-xs font-bold uppercase">Upload Front</span>
               </div>
             </FormField>
             
-            <FormField label="3. ID Back Photo">
+            <FormField label="2. ID Back Photo">
               <div className="w-full h-16 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary transition-colors cursor-pointer bg-slate-50">
                 <Upload size={18} className="mr-2" /> <span className="text-xs font-bold uppercase">Upload Back</span>
               </div>
             </FormField>
+            
+            <FormField label="3. Proof of Address">
+              <div className="w-full h-16 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary transition-colors cursor-pointer bg-slate-50">
+                <FileText size={18} className="mr-2" /> <span className="text-xs font-bold uppercase">Upload Document</span>
+              </div>
+            </FormField>
 
-            <FormField label="4. Proof of Address">
+            <FormField label="4. Additional Document (Optional / Selfie)">
               <div className="w-full h-16 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary transition-colors cursor-pointer bg-slate-50">
                 <FileText size={18} className="mr-2" /> <span className="text-xs font-bold uppercase">Upload Document</span>
               </div>
@@ -277,7 +275,12 @@ export default function BorrowerProfile() {
 
           <div className="flex justify-end gap-3 pt-4">
             <Btn variant="outline" className="!rounded-xl" onClick={() => setKycModal(false)}>Cancel</Btn>
-            <Btn className="!rounded-xl !px-10" onClick={() => { setKycStatus('pending_admin_review'); setKycModal(false); showToast('KYC Documents Submitted for Review'); }}>
+            <Btn className="!rounded-xl !px-10" onClick={() => { 
+              setKycStatus('pending_admin_review'); 
+              localStorage.setItem('kycStatus', 'pending_admin_review');
+              setKycModal(false); 
+              showToast('KYC Documents Submitted for Review'); 
+            }}>
               Submit Documents
             </Btn>
           </div>

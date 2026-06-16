@@ -57,6 +57,7 @@ export default function LoanApplyForm() {
 
   const allChecked = REQUIREMENTS.every(r => checkedReqs[r.id]);
   const [settings, setSettings] = useState(getLoanSettings());
+  const [kycStatus, setKycStatus] = useState(localStorage.getItem('kycStatus') || 'missing');
 
   useEffect(() => {
     const s = getLoanSettings();
@@ -102,6 +103,23 @@ export default function LoanApplyForm() {
         subtitle="Configure your loan requirements and bank details for processing." 
       />
 
+      {kycStatus === 'missing' ? (
+        <div className="max-w-3xl mx-auto py-16 px-6 text-center">
+          <div className="pro-card p-12 flex flex-col items-center">
+            <div className="w-20 h-20 rounded-3xl bg-rose-50 text-rose-500 flex items-center justify-center mb-8">
+              <ShieldCheck size={40} />
+            </div>
+            <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase italic mb-4">KYC Action Required</h2>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest max-w-sm mb-10">
+              You must submit your KYC documents in your profile before you can apply for a loan.
+            </p>
+            <Btn onClick={() => navigate('/borrower/profile')} className="!h-14 !px-12 italic font-black text-[10px] uppercase tracking-widest">
+              Go to Profile
+            </Btn>
+          </div>
+        </div>
+      ) : (
+      <>
       <div className="flex items-center justify-between px-2 sm:px-16 relative">
         <div className="absolute top-5 sm:top-7 left-0 w-full h-[1px] sm:h-[2px] bg-slate-100 -z-10" />
         {[
@@ -321,6 +339,8 @@ export default function LoanApplyForm() {
           )}
         </div>
       </div>
+      </>
+      )}
     </div>
   );
 }

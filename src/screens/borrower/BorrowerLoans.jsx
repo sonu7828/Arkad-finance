@@ -530,7 +530,7 @@ export default function BorrowerLoans() {
                      {/* Header */}
                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 pb-6">
                         <div>
-                           <span className="text-[9px] font-black text-purple-600 uppercase tracking-[0.2em] italic">LendaNet Core Agreement</span>
+                           <span className="text-[9px] font-black text-purple-600 uppercase tracking-[0.2em] italic">ARKAD FINANCE Core Agreement</span>
                            <h4 className="text-lg font-black text-slate-800 tracking-tight uppercase mt-0.5">Credit Service Agreement</h4>
                         </div>
                         <div className="text-left sm:text-right">
@@ -547,7 +547,7 @@ export default function BorrowerLoans() {
                            <div className="space-y-3">
                               <div>
                                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Creditor / Lender</p>
-                                 <p className="text-xs font-extrabold text-slate-800">LendaNet Capital S.A. de C.V.</p>
+                                 <p className="text-xs font-extrabold text-slate-800">ARKAD FINANCE S.A. de C.V.</p>
                               </div>
                               <div>
                                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Borrower / Client</p>
