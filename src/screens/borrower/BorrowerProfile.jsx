@@ -55,6 +55,12 @@ export default function BorrowerProfile() {
     newPassword: '',
     confirmPassword: '',
   });
+  const [kycFiles, setKycFiles] = useState({
+    idFront: null,
+    idBack: null,
+    addressProof: null,
+    additionalDoc: null
+  });
 
   const showToast = (msg) => {
     setToastMsg(msg);
@@ -249,27 +255,35 @@ export default function BorrowerProfile() {
           
           <div className="space-y-4">
             <FormField label="1. ID Front Photo">
-              <div className="w-full h-16 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary transition-colors cursor-pointer bg-slate-50">
-                <Upload size={18} className="mr-2" /> <span className="text-xs font-bold uppercase">Upload Front</span>
-              </div>
+              <label className="w-full h-16 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary transition-colors cursor-pointer bg-slate-50 relative overflow-hidden">
+                <input type="file" className="hidden" onChange={(e) => setKycFiles(f => ({...f, idFront: e.target.files?.[0]}))} />
+                <Upload size={18} className="mr-2" /> 
+                <span className="text-xs font-bold uppercase">{kycFiles.idFront ? kycFiles.idFront.name : 'Upload Front'}</span>
+              </label>
             </FormField>
             
             <FormField label="2. ID Back Photo">
-              <div className="w-full h-16 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary transition-colors cursor-pointer bg-slate-50">
-                <Upload size={18} className="mr-2" /> <span className="text-xs font-bold uppercase">Upload Back</span>
-              </div>
+              <label className="w-full h-16 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary transition-colors cursor-pointer bg-slate-50 relative overflow-hidden">
+                <input type="file" className="hidden" onChange={(e) => setKycFiles(f => ({...f, idBack: e.target.files?.[0]}))} />
+                <Upload size={18} className="mr-2" /> 
+                <span className="text-xs font-bold uppercase">{kycFiles.idBack ? kycFiles.idBack.name : 'Upload Back'}</span>
+              </label>
             </FormField>
             
             <FormField label="3. Proof of Address">
-              <div className="w-full h-16 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary transition-colors cursor-pointer bg-slate-50">
-                <FileText size={18} className="mr-2" /> <span className="text-xs font-bold uppercase">Upload Document</span>
-              </div>
+              <label className="w-full h-16 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary transition-colors cursor-pointer bg-slate-50 relative overflow-hidden">
+                <input type="file" className="hidden" onChange={(e) => setKycFiles(f => ({...f, addressProof: e.target.files?.[0]}))} />
+                <FileText size={18} className="mr-2" /> 
+                <span className="text-xs font-bold uppercase">{kycFiles.addressProof ? kycFiles.addressProof.name : 'Upload Document'}</span>
+              </label>
             </FormField>
 
             <FormField label="4. Additional Document (Optional / Selfie)">
-              <div className="w-full h-16 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary transition-colors cursor-pointer bg-slate-50">
-                <FileText size={18} className="mr-2" /> <span className="text-xs font-bold uppercase">Upload Document</span>
-              </div>
+              <label className="w-full h-16 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary transition-colors cursor-pointer bg-slate-50 relative overflow-hidden">
+                <input type="file" className="hidden" onChange={(e) => setKycFiles(f => ({...f, additionalDoc: e.target.files?.[0]}))} />
+                <FileText size={18} className="mr-2" /> 
+                <span className="text-xs font-bold uppercase">{kycFiles.additionalDoc ? kycFiles.additionalDoc.name : 'Upload Document'}</span>
+              </label>
             </FormField>
           </div>
 

@@ -67,13 +67,6 @@ export default function LoanApplyForm() {
     }
   }, []);
 
-  const filteredAmountOptions = useMemo(() => {
-    const options = LOAN_AMOUNT_OPTIONS.filter(opt => parseFloat(opt.value) >= settings.minLoanAmount);
-    if (!options.find(opt => opt.value === settings.minLoanAmount.toString())) {
-       options.unshift({ value: settings.minLoanAmount.toString(), label: `MXN $${settings.minLoanAmount.toLocaleString()} (Min)` });
-    }
-    return options.sort((a, b) => parseFloat(a.value) - parseFloat(b.value));
-  }, [settings.minLoanAmount]);
 
   const update = (key, val) => setForm(prev => ({ ...prev, [key]: val }));
 
