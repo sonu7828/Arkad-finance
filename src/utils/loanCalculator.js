@@ -101,6 +101,11 @@ export const calculateLoanStatus = (loan) => {
     return 'terms_set';
   }
 
+  // Check if accepted/approved by client but not yet disbursed
+  if (statusLower === 'approved' || statusLower === 'pending_disbursement') {
+    return 'pending_disbursement';
+  }
+
   // 3. Check if fully repaid
   if (statusLower === 'completed' || statusLower === 'closed' || (loan.remainingPrincipal !== undefined && loan.remainingPrincipal <= 0)) {
     return 'Closed';
@@ -108,7 +113,6 @@ export const calculateLoanStatus = (loan) => {
 
   // 4. Initial state if not yet disbursed or newly approved
   if (statusLower === 'pending') return 'PENDING';
-  if (!loan.disbursementDate) return 'Active';
 
   // 3. Time-based status logic
   const today = new Date();

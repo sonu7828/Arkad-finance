@@ -14,10 +14,14 @@ export function StatusBadge({ status, onClick }) {
     'active': { bg: '#ecfdf5', text: '#10b981', border: '#d1fae5' },
     'identified': { bg: '#f8fafc', text: '#64748b', border: '#e2e8f0' },
     'terms_set': { bg: '#f5f3ff', text: '#7c3aed', border: '#ddd6fe' },
+    'pending_disbursement': { bg: '#fef3c7', text: '#d97706', border: '#fcd34d' },
   };
 
   const s = specificMappings[status?.toLowerCase()] || { bg: '#f8fafc', text: '#64748b', border: '#e2e8f0' };
-  const label = status?.toLowerCase() === 'terms_set' ? 'Pending Client Approval' : status;
+  const label = 
+    status?.toLowerCase() === 'terms_set' ? 'Pending Client Approval' : 
+    status?.toLowerCase() === 'pending_disbursement' ? 'Pending Disbursement' : 
+    status;
 
   return (
     <motion.button

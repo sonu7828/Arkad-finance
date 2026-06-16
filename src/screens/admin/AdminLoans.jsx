@@ -239,6 +239,7 @@ export default function AdminLoans() {
       if (statusFilter === 'ALL') return matchesSearch;
       if (statusFilter === 'PENDING') return matchesSearch && (loan.status === 'pending' || loan.status === 'terms_set');
       if (statusFilter === 'TERMS_SET') return matchesSearch && loan.status === 'terms_set';
+      if (statusFilter === 'PENDING_DISBURSEMENT') return matchesSearch && loan.status === 'pending_disbursement';
       if (statusFilter === 'ACTIVE') return matchesSearch && loan.status === 'active';
       if (statusFilter === 'LATE') return matchesSearch && loan.status === 'late';
       return matchesSearch;
@@ -257,6 +258,7 @@ export default function AdminLoans() {
     { label: 'Total Portfolio', value: loans.length, icon: LayoutGrid, key: 'ALL', color: 'text-slate-600' },
     { label: 'Pending Offers', value: loans.filter(l => l.status === 'pending').length, icon: Zap, key: 'PENDING', color: 'text-amber-500' },
     { label: 'Sent Offers', value: loans.filter(l => l.status === 'terms_set').length, icon: History, key: 'TERMS_SET', color: 'text-indigo-500' },
+    { label: 'Disbursements', value: loans.filter(l => l.status === 'pending_disbursement').length, icon: Wallet, key: 'PENDING_DISBURSEMENT', color: 'text-purple-500' },
     { label: 'Active Contracts', value: loans.filter(l => l.status === 'active').length, icon: ShieldCheck, key: 'ACTIVE', color: 'text-primary' },
     { label: 'Overdue Alerts', value: loans.filter(l => l.status === 'late').length, icon: AlertCircle, key: 'LATE', color: 'text-rose-500' },
   ];
@@ -308,6 +310,35 @@ export default function AdminLoans() {
     updateLoan(viewModal.id, approvedFields);
     setViewModal(null);
     setShowApproveSuccess(true);
+  };
+
+  const handleDisburseConfirm = () => {
+    const confId = document.getElementById('disbursementConfId')?.value || '';
+    const confNotes = document.getElementById('disbursementConfNotes')?.value || '';
+
+    if (!confId.trim()) {
+       alert('Please provide the disbursement transfer confirmation / receipt reference ID.');
+       return;
+    }
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    const dueDate = new Date();
+    dueDate.setDate(dueDate.getDate() + 30);
+    const dueDateStr = dueDate.toISOString().split('T')[0];
+
+    updateLoan(viewModal.id, {
+      status: 'Active',
+      disbursementDate: todayStr,
+      dueDate: dueDateStr,
+      disbursementConfirmation: {
+        id: confId,
+        notes: confNotes,
+        confirmedAt: new Date().toISOString()
+      }
+    });
+
+    setViewModal(null);
+    alert('Funds delivery confirmed successfully. The loan contract is now Active.');
   };
 
   const handleDeny = () => {
@@ -391,7 +422,7 @@ export default function AdminLoans() {
         }
       />
 
-      <section className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6">
+      <section className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6">
         {stats.map((s) => (
           <button
             key={s.key}
@@ -639,6 +670,89 @@ export default function AdminLoans() {
                         </div>
                      </div>
                   )}
+               </div>
+            ) : viewModal.status === 'pending_disbursement' ? (
+               <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-700">
+                  <div className="p-5 bg-purple-50 border border-purple-100 rounded-3xl flex items-start gap-4">
+                     <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center shrink-0">
+                        <Wallet size={20} />
+                     </div>
+                     <div className="flex-1">
+                        <h5 className="text-xs font-bold uppercase tracking-widest text-purple-800">Pending Funds Disbursement</h5>
+                        <p className="text-[11px] text-slate-600 font-medium leading-relaxed mt-1">
+                          The borrower has signed the credit agreement and configured their preferred disbursement parameters. Please execute the payment and record the confirmation below to activate this loan contract.
+                        </p>
+                     </div>
+                  </div>
+
+                  <div className="p-6 bg-slate-50 border border-slate-200 rounded-[2rem] space-y-6">
+                     <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-200/60 pb-2 italic">Disbursement Details</h5>
+                     
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs font-bold text-slate-700">
+                        <div>
+                           <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Delivery Mode</p>
+                           <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-purple-100 text-purple-700 border border-purple-200 rounded-lg text-[10px] font-extrabold uppercase mt-1">
+                              {viewModal.disbursementMethod === 'bank' ? 'Bank Transfer' : 'Cash Pickup / Delivery'}
+                           </span>
+                        </div>
+                        <div>
+                           <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Disbursement Amount Due</p>
+                           <p className="text-sm font-extrabold text-emerald-600 mt-1">{formatMoney(viewModal.principalAmount - (viewModal.principalAmount * (viewModal.initiationFee || 3) / 100))}</p>
+                        </div>
+                     </div>
+
+                     <Divider className="opacity-50" />
+
+                     {viewModal.disbursementMethod === 'bank' ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                           <div>
+                              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Bank Name</p>
+                              <p className="text-xs font-extrabold text-slate-800 mt-1">{viewModal.disbursementDetails?.bankName || 'N/A'}</p>
+                           </div>
+                           <div>
+                              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Account / CLABE</p>
+                              <p className="text-xs font-mono font-bold text-slate-800 mt-1">{viewModal.disbursementDetails?.account || 'N/A'}</p>
+                           </div>
+                           <div>
+                              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">SWIFT Code</p>
+                              <p className="text-xs font-mono font-bold text-slate-800 mt-1">{viewModal.disbursementDetails?.swift || 'N/A'}</p>
+                           </div>
+                        </div>
+                     ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                           <div>
+                              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Delivery Address</p>
+                              <p className="text-xs font-extrabold text-slate-800 mt-1">{viewModal.disbursementDetails?.address || 'N/A'}</p>
+                           </div>
+                           <div>
+                              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Time Preference</p>
+                              <p className="text-xs font-extrabold text-slate-800 mt-1">{viewModal.disbursementDetails?.timePref || 'N/A'}</p>
+                           </div>
+                        </div>
+                     )}
+
+                     <Divider className="opacity-50" />
+
+                     <div className="space-y-4">
+                        <FormField label={viewModal.disbursementMethod === 'bank' ? "Bank Transfer Confirmation / Ref ID" : "Cash Handover Confirmation Receipt ID"}>
+                           <Input 
+                             id="disbursementConfId" 
+                             placeholder={viewModal.disbursementMethod === 'bank' ? "e.g. SWIFT-REF-123456" : "e.g. CASH-DEL-123456"} 
+                             required 
+                           />
+                        </FormField>
+                        <FormField label="Internal Delivery & Auditing Log Notes">
+                           <Input id="disbursementConfNotes" placeholder="e.g. Wire confirmed by accounting, cash delivered to client at home address" />
+                        </FormField>
+                     </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-4 pt-4 border-t border-slate-50">
+                     <Btn variant="outline" className="w-full sm:flex-1 h-14" onClick={() => setViewModal(null)}>Dismiss</Btn>
+                     <Btn className="w-full sm:flex-[2] h-14 !bg-emerald-600 hover:!bg-emerald-700 shadow-xl" onClick={handleDisburseConfirm}>
+                        Confirm Funds Delivered & Activate Contract
+                     </Btn>
+                  </div>
                </div>
             ) : (
                <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-700">

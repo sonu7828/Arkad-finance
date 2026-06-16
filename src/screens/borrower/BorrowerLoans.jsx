@@ -114,14 +114,11 @@ export default function BorrowerLoans() {
     setIsAccepting(true);
     setTimeout(() => {
       const todayStr = new Date().toISOString().split('T')[0];
-      const dueDate = new Date();
-      dueDate.setDate(dueDate.getDate() + 30);
-      const dueDateStr = dueDate.toISOString().split('T')[0];
 
       updateLoan(acceptTermsModal.id, {
-        status: 'active',
-        disbursementDate: todayStr,
-        dueDate: dueDateStr,
+        status: 'pending_disbursement',
+        disbursementDate: null,
+        dueDate: null,
         signatureName: signatureName,
         signatureDate: todayStr,
         remainingPrincipal: acceptTermsModal.principalAmount,
@@ -133,7 +130,7 @@ export default function BorrowerLoans() {
       setAcceptTermsModal(null);
       setSuccessMsg({
         title: 'Agreement Signed',
-        msg: 'Congratulations! Your credit agreement has been digitally signed and accepted. Funds are now disbursed.'
+        msg: 'Congratulations! Your credit agreement has been digitally signed and accepted. Funds will be disbursed according to your preferred method.'
       });
     }, 1200);
   };
@@ -258,7 +255,7 @@ export default function BorrowerLoans() {
       </section>
 
       {/* Active Loans Section */}
-      {loans.filter(l => ['active', 'late'].includes((l.status || '').toLowerCase())).length > 0 && (
+      {loans.filter(l => ['active', 'late', 'pending_disbursement'].includes((l.status || '').toLowerCase())).length > 0 && (
         <div className="space-y-6 animate-in slide-in-from-bottom-8 duration-700">
           <div className="flex items-center justify-between px-2">
             <div>
@@ -267,7 +264,7 @@ export default function BorrowerLoans() {
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-             {loans.filter(l => ['active', 'late'].includes((l.status || '').toLowerCase())).map(loan => {
+             {loans.filter(l => ['active', 'late', 'pending_disbursement'].includes((l.status || '').toLowerCase())).map(loan => {
                 const today = new Date();
                 const dueDate = loan.dueDate ? new Date(loan.dueDate) : null;
                 let daysLate = 0;
@@ -305,30 +302,48 @@ export default function BorrowerLoans() {
                         <StatusBadge status={loan.status} />
                      </div>
 
-                     {/* Next Payment Info */}
-                     <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2">Next Payment Due</p>
-                        <div className="flex items-center justify-between">
-                           <span className="text-2xl font-black text-primary">{formatMoney(details.monthlyPaymentCurrent + (isOverdue ? details.delinquentPenalty : 0))}</span>
-                           <div className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-widest ${isOverdue ? 'bg-rose-100 text-rose-600' : 'bg-amber-100 text-amber-600'}`}>
-                             {dueCounter}
-                           </div>
-                        </div>
-                        
-                        <div className="flex flex-col sm:flex-row items-center gap-3 mt-5">
-                           <button className="w-full sm:flex-1 h-10 bg-[#25D366]/10 text-[#25D366] border border-[#25D366]/20 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#25D366]/20 transition-colors flex items-center justify-center gap-2" onClick={(e) => { 
-                                e.stopPropagation(); 
-                                const dueAmt = details.monthlyPaymentCurrent + (isOverdue ? details.delinquentPenalty : 0);
-                                const msg = `Hello I would like to make a payment for this loan: ${loan.id}. Amount due: MXN $${dueAmt}. Please confirm the payment method and coordinate the receiving details.`;
-                                window.open(`https://wa.me/1234567890?text=${encodeURIComponent(msg)}`, '_blank');
-                           }}>
-                              <MessageSquare size={14} /> WhatsApp Payment
-                           </button>
-                           <button className="w-full sm:flex-1 h-10 bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-colors flex items-center justify-center gap-2" onClick={(e) => { e.stopPropagation(); setPaymentActionModal({ type: 'bank', loan }); }}>
-                              <Wallet size={14} /> Bank
-                           </button>
-                        </div>
-                     </div>
+                     {/* Next Payment Info / Disbursement Status */}
+                     {loan.status === 'pending_disbursement' ? (
+                       <div className="bg-purple-50/50 rounded-2xl p-5 border border-purple-100/50 space-y-3">
+                          <div className="flex items-center gap-2 text-purple-600">
+                             <Clock size={16} />
+                             <p className="text-[10px] font-black uppercase tracking-widest">Disbursement in Progress</p>
+                          </div>
+                          <p className="text-xs font-bold text-slate-700 leading-relaxed">
+                             {loan.disbursementMethod === 'bank' 
+                               ? `Transfer scheduled to ${loan.disbursementDetails?.bankName} (Acct: ...${String(loan.disbursementDetails?.account || '').slice(-4)}).`
+                               : `Cash pickup/delivery coordinated at: ${loan.disbursementDetails?.address}.`
+                             }
+                          </p>
+                          <p className="text-[9px] text-slate-400 font-bold italic">
+                             Lender is currently executing the payment transfer. The contract will activate once funds delivery is confirmed.
+                          </p>
+                       </div>
+                     ) : (
+                       <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2">Next Payment Due</p>
+                          <div className="flex items-center justify-between">
+                             <span className="text-2xl font-black text-primary">{formatMoney(details.monthlyPaymentCurrent + (isOverdue ? details.delinquentPenalty : 0))}</span>
+                             <div className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-widest ${isOverdue ? 'bg-rose-100 text-rose-600' : 'bg-amber-100 text-amber-600'}`}>
+                               {dueCounter}
+                             </div>
+                          </div>
+                          
+                          <div className="flex flex-col sm:flex-row items-center gap-3 mt-5">
+                             <button className="w-full sm:flex-1 h-10 bg-[#25D366]/10 text-[#25D366] border border-[#25D366]/20 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#25D366]/20 transition-colors flex items-center justify-center gap-2" onClick={(e) => { 
+                                  e.stopPropagation(); 
+                                  const dueAmt = details.monthlyPaymentCurrent + (isOverdue ? details.delinquentPenalty : 0);
+                                  const msg = `Hello I would like to make a payment for this loan: ${loan.id}. Amount due: MXN $${dueAmt}. Please confirm the payment method and coordinate the receiving details.`;
+                                  window.open(`https://wa.me/1234567890?text=${encodeURIComponent(msg)}`, '_blank');
+                             }}>
+                                <MessageSquare size={14} /> WhatsApp Payment
+                             </button>
+                             <button className="w-full sm:flex-1 h-10 bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-colors flex items-center justify-center gap-2" onClick={(e) => { e.stopPropagation(); setPaymentActionModal({ type: 'bank', loan }); }}>
+                                <Wallet size={14} /> Bank
+                             </button>
+                          </div>
+                       </div>
+                     )}
 
                      {/* Footer Stats */}
                      <div className="grid grid-cols-2 gap-4 pt-2">
