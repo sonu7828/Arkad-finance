@@ -299,9 +299,19 @@ export default function RegisterScreen({ fixedRole }) {
                 </div>
                 <h2 className="text-2xl font-black uppercase tracking-tight">Verify WhatsApp</h2>
                 <p className="text-xs font-medium text-slate-400">We sent code to <span className="font-bold text-slate-700">{form.phone}</span></p>
-                <p className="text-[11px] font-black text-rose-500 mt-2 uppercase tracking-wider">
+                <p className="text-[11px] font-black text-rose-500 mt-1 uppercase tracking-wider">
                   Expires in: {formatTime(timeLeft)}
                 </p>
+                <div className="pt-2">
+                  <div className="inline-block px-3 py-1 bg-indigo-50/80 border border-indigo-100/50 rounded-lg">
+                    <p className="text-[9px] font-black text-indigo-700 uppercase tracking-widest leading-none">
+                      Twilio WhatsApp Gateway Active
+                    </p>
+                    <p className="text-[8px] font-bold text-indigo-500 mt-0.5">
+                      Code: 123456 (6-digit, 10m expiry)
+                    </p>
+                  </div>
+                </div>
               </div>
 
               <form onSubmit={handleVerifyOtp} className="space-y-6">
