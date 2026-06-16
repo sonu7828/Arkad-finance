@@ -10,8 +10,8 @@ const getOffsetDateString = (offsetDays) => {
 
 // Fallback demo data - used only if localStorage is completely empty
 const DEMO_LOANS = [
-  { id: 'LN-8801', user: { name: 'Verified Capital User' }, principalAmount: 5000, remainingPrincipal: 5000, duration: 12, status: 'Pending', createdAt: '2024-10-14', interestRate: 10, method: 'CASH', disbursementDate: null, payments: [] },
-  { id: 'LN-8802', user: { name: 'Sarah Williams' }, principalAmount: 8500, remainingPrincipal: 8500, duration: 6, status: 'Pending', createdAt: '2024-10-13', interestRate: 10, method: 'BANK_TRANSFER', disbursementDate: null, payments: [] },
+  { id: 'LOAN-2024-001', user: { name: 'Verified Capital User' }, principalAmount: 1000, remainingPrincipal: 1000, duration: 12, status: 'Active', createdAt: '2026-06-01', interestRate: 5, method: 'CASH', disbursementDate: '2026-06-01', dueDate: getOffsetDateString(12), payments: [], delinquentRate: 12 },
+  { id: 'LOAN-2024-002', user: { name: 'Verified Capital User' }, principalAmount: 2500, remainingPrincipal: 2500, duration: 12, status: 'Active', createdAt: '2026-06-01', interestRate: 5, method: 'BANK_TRANSFER', disbursementDate: '2026-06-01', dueDate: getOffsetDateString(-5), payments: [], delinquentRate: 12 },
   { id: 'LN-8803', user: { name: 'David Brown' }, principalAmount: 3200, remainingPrincipal: 3200, duration: 9, status: 'Active', createdAt: '2024-10-12', interestRate: 12, method: 'CASH', disbursementDate: '2024-10-12', dueDate: getOffsetDateString(0), payments: [] },
   { id: 'LN-8804', user: { name: 'Emma Thompson' }, principalAmount: 12000, remainingPrincipal: 12000, duration: 18, status: 'Active', createdAt: '2024-10-10', interestRate: 10, method: 'BANK_TRANSFER', disbursementDate: '2024-10-10', dueDate: getOffsetDateString(-3), payments: [] },
   { 

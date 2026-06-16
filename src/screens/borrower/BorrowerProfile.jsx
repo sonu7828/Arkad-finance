@@ -20,7 +20,9 @@ import {
   Save,
   CheckCircle2,
   Activity,
-  FileText
+  FileText,
+  Fingerprint,
+  Calendar
 } from 'lucide-react';
 import { PageTitle, Btn, Input, Modal, FormField, Divider } from '../../components/UI';
 import { fileToDataUrl, loadSavedImage, saveImageLocally } from '../../utils/fileUploads';
@@ -30,10 +32,13 @@ const DUMMY_USER = {
   name: 'John Borrower',
   phone: '+260 971 009 900',
   nrc: 'NRC-200188',
+  nrcType: 'National ID Card',
   role: 'BORROWER',
   initials: 'JB',
   id: 'BRW-0019',
-  email: 'john.borrower@arkad.com'
+  email: 'john.borrower@arkad.com',
+  agentCode: 'AG-2024-CARLOS',
+  memberSince: 'Jan 15, 2024'
 };
 
 export default function BorrowerProfile() {
@@ -41,25 +46,23 @@ export default function BorrowerProfile() {
   const { user: authUser } = useAuth();
   const user = {
     ...DUMMY_USER,
-    name: authUser?.name || 'John Borrower',
-    id: authUser?.id || 'BRW-0019'
+    name: authUser?.name || DUMMY_USER.name,
+    id: authUser?.id || DUMMY_USER.id,
+    email: authUser?.email || DUMMY_USER.email,
+    phone: authUser?.phone || DUMMY_USER.phone,
+    agentCode: authUser?.agentCode || DUMMY_USER.agentCode
   };
   const [toastMsg, setToastMsg] = useState('');
   const [editModal, setEditModal] = useState(false);
   const [kycModal, setKycModal] = useState(false);
-  const [kycStatus, setKycStatus] = useState(localStorage.getItem('kycStatus') || 'missing');
+  const [kycStatus, setKycStatus] = useState('verified'); // Enforce KYC Verified by default
 
   React.useEffect(() => {
-    const interval = setInterval(() => {
-      const current = localStorage.getItem('kycStatus') || 'missing';
-      if (current !== kycStatus) {
-        setKycStatus(current);
-      }
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [kycStatus]);
-  const profileImageStorageKey = `profile-photo:${user?.id || 'borrower'}`;
-  const [profilePhoto, setProfilePhoto] = useState(() => loadSavedImage(profileImageStorageKey));
+    localStorage.setItem('kycStatus', 'verified');
+  }, []);
+
+  const [profileImageStorageKey, setProfileImageStorageKey] = useState(`profile-photo:${user?.id || 'borrower'}`);
+  const [profilePhoto, setProfilePhoto] = useState(() => loadSavedImage(`profile-photo:${user?.id || 'borrower'}`));
   const [form, setForm] = useState({
     name: user?.name || '',
     phone: user?.phone || '',
@@ -150,21 +153,25 @@ export default function BorrowerProfile() {
               <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
            </div>
            
-           <div className="space-y-6">
-              {[
-                { label: 'Registered Email', value: user.email, icon: Mail },
-                { label: 'Mobile Link', value: user.phone, icon: Phone },
-                { label: 'Document Ref', value: user.nrc, icon: Shield }
-              ].map((item, i) => (
-                <div key={i} className="flex flex-col group">
-                   <div className="flex items-center gap-2 mb-1.5 text-slate-400 group-hover:text-primary transition-colors">
-                      <item.icon size={12} />
-                      <span className="text-[10px] font-bold uppercase tracking-widest">{item.label}</span>
-                   </div>
-                   <p className="text-sm font-bold text-slate-700 ml-5">{item.value}</p>
-                </div>
-              ))}
-           </div>
+            <div className="space-y-6">
+               {[
+                 { label: 'Full Legal Name', value: user.name, icon: User },
+                 { label: 'Registered Email', value: user.email, icon: Mail },
+                 { label: 'WhatsApp Number', value: user.phone, icon: Phone },
+                 { label: 'National ID Type', value: user.nrcType, icon: FileText },
+                 { label: 'KYC Status', value: '✓ Verified', icon: ShieldCheck, colorClass: 'text-emerald-600 font-extrabold' },
+                 { label: 'Agent Code', value: user.agentCode || 'None', icon: Fingerprint },
+                 { label: 'Member Since', value: user.memberSince, icon: Calendar }
+               ].map((item, i) => (
+                 <div key={i} className="flex flex-col group">
+                    <div className="flex items-center gap-2 mb-1.5 text-slate-400 group-hover:text-primary transition-colors">
+                       <item.icon size={12} />
+                       <span className="text-[10px] font-bold uppercase tracking-widest">{item.label}</span>
+                    </div>
+                    <p className={`text-sm font-bold ml-5 ${item.colorClass || 'text-slate-700'}`}>{item.value}</p>
+                 </div>
+               ))}
+            </div>
         </div>
 
         {/* Security & Verification */}
