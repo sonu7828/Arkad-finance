@@ -74,8 +74,8 @@ export default function BorrowerPayments() {
         l.payments.forEach(p => result.push({ ...p, loanId: l.id }));
       }
     });
-    // Sort newest first
-    return result.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    // Sort oldest first by due date
+    return result.sort((a, b) => new Date(a.dueDate || a.date || a.createdAt || 0) - new Date(b.dueDate || b.date || b.createdAt || 0));
   }, [myLoans]);
 
   const [localPayments, setLocalPayments] = useState([]);
@@ -150,6 +150,17 @@ export default function BorrowerPayments() {
     { label: 'Outstanding Debt', value: formatMoney(totalDebtBalance), icon: DollarSign, color: 'text-rose-500' },
   ];
 
+  const formatShortDate = (dateStr) => {
+    if (!dateStr || dateStr === 'N/A' || dateStr === '-') return '-';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return '-';
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  const formatMoneyShort = (value) => {
+    return `$${Number(value || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+  };
+
   const columns = [
     {
       header: 'Due Date',
@@ -158,34 +169,51 @@ export default function BorrowerPayments() {
           <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400">
             <Calendar size={16} />
           </div>
-          <span className="text-sm font-bold text-slate-900 uppercase">{formatDateDDMMYYYY(p.dueDate || p.date || p.createdAt)}</span>
+          <span className="text-sm font-bold text-slate-900 uppercase">
+            {formatShortDate(p.dueDate || p.createdAt)}
+          </span>
         </div>
-      )
-    },
-    {
-      header: 'Paid Date',
-      render: (p) => (
-        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-3 py-1.5 bg-slate-50 rounded-lg">
-          {formatDateDDMMYYYY(p.date || p.createdAt)}
-        </span>
       )
     },
     {
       header: 'Amount',
       render: (p) => (
-        <span className="text-sm font-bold text-slate-900">{formatMoney(p.amount || p.totalCollected)}</span>
+        <span className="text-sm font-bold text-slate-900">{formatMoneyShort(p.amount || p.totalCollected)}</span>
       )
     },
     {
       header: 'Status',
       align: 'center',
       render: (p) => {
-        let st = (p.status || 'PENDING').toUpperCase();
-        if (p.type === 'EXACT' || p.type === 'OVERPAYMENT') st = 'PAID';
-        if (p.type === 'PARTIAL') st = 'PARTIAL';
-        if (p.status === 'verified') st = 'PAID';
-        return <StatusBadge status={st} />;
+        const statusStr = String(p.status || 'PENDING').toUpperCase();
+        if (statusStr === 'PAID' || statusStr === 'VERIFIED') {
+          return (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-50 text-emerald-600 border border-emerald-100">
+              ✓ PAID
+            </span>
+          );
+        }
+        if (statusStr === 'DUE SOON') {
+          return (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-blue-50 text-blue-600 border border-blue-100">
+              DUE SOON
+            </span>
+          );
+        }
+        return (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-amber-50 text-amber-600 border border-amber-100">
+            PENDING
+          </span>
+        );
       }
+    },
+    {
+      header: 'Paid Date',
+      render: (p) => (
+        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-3 py-1 bg-slate-50 rounded-lg">
+          {p.date ? formatShortDate(p.date) : '-'}
+        </span>
+      )
     }
   ];
 
@@ -196,7 +224,7 @@ export default function BorrowerPayments() {
         subtitle="Manage your active liabilities and track historical transaction receipts."
         action={
           <div className="flex items-center gap-3">
-            <Btn variant="outline" onClick={generateDummyPaymentsData} className="italic font-black uppercase tracking-widest text-[9px] rounded-xl !h-12 px-6">
+            <Btn variant="outline" onClick={() => generateDummyPaymentsData(user?.email, user?.name)} className="italic font-black uppercase tracking-widest text-[9px] rounded-xl !h-12 px-6">
               Generate Trial Data
             </Btn>
             <Btn onClick={() => setShowPayModal(true)} className="shadow-xl shadow-primary/20 italic font-black uppercase tracking-widest text-[9px] rounded-xl !h-12 px-6">
@@ -247,7 +275,7 @@ export default function BorrowerPayments() {
               <p className="text-slate-400 text-xs mt-1">To trial/test making payments and viewing receipt history, generate trial data.</p>
             </div>
             <Btn 
-              onClick={generateDummyPaymentsData}
+              onClick={() => generateDummyPaymentsData(user?.email, user?.name)}
               className="mt-2 flex items-center gap-2 shadow-lg shadow-primary/20 rounded-xl"
               size="sm"
             >

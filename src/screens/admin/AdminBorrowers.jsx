@@ -3,10 +3,17 @@ import { createPortal } from 'react-dom';
 import { 
   Users, ShieldCheck, AlertTriangle, Search, User, Trash2, Pencil, Phone, 
   Calendar, MapPin, Activity, Database, Filter, UserPlus, ArrowRight, 
-  ChevronRight, Hash, Sparkles, Zap, CheckCircle2
+  ChevronRight, Hash, Sparkles, Zap, CheckCircle2, ShieldAlert
 } from 'lucide-react';
 import { Btn, PageTitle, StatusBadge, StatCard, Input, Select, ProTable, Modal, FormField, Divider } from '../../components/UI';
 import { formatDateDDMMYYYY } from '../../utils/dateUtils';
+import { useLoans } from '../../context/LoanContext';
+
+// Standard Lucide icons re-import just to ensure safety
+import { 
+  Phone as PhoneIcon, Calendar as CalendarIcon, MapPin as MapPinIcon, Hash as HashIcon, 
+  Zap as ZapIcon, AlertCircle, FileText, CheckCircle2 as CheckIcon
+} from 'lucide-react';
 
 const RiskBadge = ({ risk }) => {
   const configs = {
@@ -23,28 +30,27 @@ const RiskBadge = ({ risk }) => {
   );
 };
 
-
 const DUMMY_BORROWERS = [
-  { id: 'BOR-101', name: 'Alice Wilson', email: 'alice@gmail.com', phone: '+1 555 0101', nrc: 'ID-88271', dob: '1990-05-12', address: 'San Francisco, CA', risk: 'GREEN', isApproved: true, createdAt: '2023-01-15', leadStatus: 'HOT LEAD', lastContact: '2026-05-10', nextFollowUp: '2026-05-12', notes: 'Interested in ₹5L Home Loan. Pending document pickup.' },
-  { id: 'BOR-102', name: 'Bob Thompson', email: 'bob@gmail.com', phone: '+1 555 0102', nrc: 'ID-88272', dob: '1985-11-20', address: 'Austin, TX', risk: 'AMBER', isApproved: true, createdAt: '2023-02-20', leadStatus: 'CONTACTED', lastContact: '2026-05-08', nextFollowUp: '2026-05-15', notes: 'Called. Asked to call back after 3 days.' },
-  { id: 'BOR-103', name: 'Charlie Davis', email: 'charlie@gmail.com', phone: '+1 555 0103', nrc: 'ID-88273', dob: '1992-03-10', address: 'Chicago, IL', risk: 'RED', isApproved: false, createdAt: '2023-03-05', leadStatus: 'NEW SIGNUP', lastContact: '2026-05-11', nextFollowUp: '2026-05-11', notes: 'Just registered. Need to explain interest rates.' },
-  { id: 'BOR-104', name: 'Diana Prince', email: 'diana@gmail.com', phone: '+1 555 0104', nrc: 'ID-88274', dob: '1988-07-05', address: 'Seattle, WA', risk: 'GREEN', isApproved: true, createdAt: '2023-04-12', leadStatus: 'COLD', lastContact: '2026-05-01', nextFollowUp: '2026-05-20', notes: 'Application incomplete. No response on calls.' },
+  { id: 'BOR-101', name: 'Alice Wilson', email: 'alice@gmail.com', phone: '+1 555 0101', nrc: 'ID-88271', dob: '1990-05-12', address: 'San Francisco, CA', risk: 'GREEN', isApproved: true, kyc: 'approved', status: 'active', createdAt: '2023-01-15', leadStatus: 'HOT LEAD', lastContact: '2026-05-10', nextFollowUp: '2026-05-12', notes: 'Interested in loan. Documents verified.' },
+  { id: 'BOR-102', name: 'Bob Thompson', email: 'bob@gmail.com', phone: '+1 555 0102', nrc: 'ID-88272', dob: '1985-11-20', address: 'Austin, TX', risk: 'AMBER', isApproved: true, kyc: 'pending', status: 'active', createdAt: '2023-02-20', leadStatus: 'CONTACTED', lastContact: '2026-05-08', nextFollowUp: '2026-05-15', notes: 'Pending front page ID signature.' },
+  { id: 'BOR-103', name: 'Charlie Davis', email: 'charlie@gmail.com', phone: '+1 555 0103', nrc: 'ID-88273', dob: '1992-03-10', address: 'Chicago, IL', risk: 'RED', isApproved: false, kyc: 'rejected', status: 'suspended', createdAt: '2023-03-05', leadStatus: 'NEW SIGNUP', lastContact: '2026-05-11', nextFollowUp: '2026-05-11', notes: 'KYC rejected due to expired credentials.' },
+  { id: 'BOR-104', name: 'Diana Prince', email: 'diana@gmail.com', phone: '+1 555 0104', nrc: 'ID-88274', dob: '1988-07-05', address: 'Seattle, WA', risk: 'GREEN', isApproved: true, kyc: 'pending', status: 'active', createdAt: '2023-04-12', leadStatus: 'COLD', lastContact: '2026-05-01', nextFollowUp: '2026-05-20', notes: 'Awaiting utility statement upload.' },
 ];
 
-function formatMoney(value) {
-  return `MXN $${Number(value || 0).toLocaleString()}`;
-}
-
 export default function AdminBorrowers() {
+  const { loans } = useLoans();
   const [borrowers, setBorrowers] = useState(DUMMY_BORROWERS);
   const [search, setSearch] = useState('');
   const [riskFilter, setRiskFilter] = useState('ALL');
+  const [kycFilter, setKycFilter] = useState('ALL');
+  
   const [viewModal, setViewModal] = useState(null);
+  const [selectedKycBorrower, setSelectedKycBorrower] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [kycModal, setKycModal] = useState(false);
-  const [form, setForm] = useState({ name: '', email: '', phone: '', nrc: '', dob: '', address: '', password: 'Password123!', risk: 'GREEN' });
+  
+  const [form, setForm] = useState({ name: '', email: '', phone: '', nrc: '', dob: '', address: '', password: 'Password123!', risk: 'GREEN', kyc: 'pending', status: 'active' });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [kycStatus, setKycStatus] = useState(localStorage.getItem('kycStatus') || 'missing');
   const [toastMsg, setToastMsg] = useState('');
 
   const showToast = (msg) => {
@@ -52,91 +58,109 @@ export default function AdminBorrowers() {
     setTimeout(() => setToastMsg(''), 3000);
   };
 
-  React.useEffect(() => {
-    // Poll for changes since localStorage events don't fire in the same tab, 
-    // and sometimes react doesn't catch them across fast switches.
-    const interval = setInterval(() => {
-      const current = localStorage.getItem('kycStatus') || 'missing';
-      if (current !== kycStatus) {
-        setKycStatus(current);
-      }
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [kycStatus]);
-
   const filtered = useMemo(() => {
     return borrowers.filter(b => {
       const matchSearch = b.name.toLowerCase().includes(search.toLowerCase()) || b.nrc.includes(search);
       const matchRisk   = riskFilter === 'ALL' || b.risk === riskFilter;
-      return matchSearch && matchRisk;
+      const matchKyc    = kycFilter === 'ALL' || b.kyc === kycFilter;
+      return matchSearch && matchRisk && matchKyc;
     });
-  }, [borrowers, search, riskFilter]);
+  }, [borrowers, search, riskFilter, kycFilter]);
 
   const handleAddBorrower = (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     setTimeout(() => {
-      const newBorrower = { ...form, id: `BOR-${101 + borrowers.length}`, isApproved: true, createdAt: new Date().toISOString() };
+      const newBorrower = { 
+        ...form, 
+        id: `BOR-${101 + borrowers.length}`, 
+        isApproved: true, 
+        createdAt: new Date().toISOString() 
+      };
       setBorrowers([newBorrower, ...borrowers]);
       setIsSubmitting(false);
       setIsAddModalOpen(false);
-      setForm({ name: '', email: '', phone: '', nrc: '', dob: '', address: '', password: 'Password123!', risk: 'GREEN' });
+      setForm({ name: '', email: '', phone: '', nrc: '', dob: '', address: '', password: 'Password123!', risk: 'GREEN', kyc: 'pending', status: 'active' });
+      showToast('New Borrower Onboarded Successfully.');
     }, 1000);
   };
+
+  const handleToggleSuspend = (id) => {
+    setBorrowers(prev => prev.map(b => {
+      if (b.id !== id) return b;
+      const newStatus = b.status === 'suspended' ? 'active' : 'suspended';
+      showToast(`Account ${b.name} has been ${newStatus === 'suspended' ? 'SUSPENDED' : 'REACTIVATED'}.`);
+      return { ...b, status: newStatus };
+    }));
+  };
+
+  const handleOpenKycReview = (borrower) => {
+    setSelectedKycBorrower(borrower);
+    setKycModal(true);
+  };
+
+  const handleKycVerdict = (verdict) => {
+    if (!selectedKycBorrower) return;
+    setBorrowers(prev => prev.map(b => {
+      if (b.id !== selectedKycBorrower.id) return b;
+      return { ...b, kyc: verdict };
+    }));
+    setKycModal(false);
+    showToast(`KYC status for ${selectedKycBorrower.name} marked as ${verdict.toUpperCase()}.`);
+    setSelectedKycBorrower(null);
+  };
+
+  // Get loan history for dossier view
+  const userLoanHistory = useMemo(() => {
+    if (!viewModal) return [];
+    return loans.filter(l => 
+      l.user?.name?.toLowerCase().includes(viewModal.name.toLowerCase()) || 
+      l.user?.email?.toLowerCase().includes(viewModal.email.toLowerCase())
+    );
+  }, [viewModal, loans]);
 
   return (
     <div className="space-y-10 animate-in fade-in duration-700">
       <PageTitle 
-        title="Client Portfolio" 
-        subtitle="Manage borrower identities and individual risk profiles" 
+        title="Borrowers & User Management" 
+        subtitle="Manage borrower identities, KYC verifications, suspension states, and review loan histories" 
         action={
            <Btn size="md" onClick={() => setIsAddModalOpen(true)}>
-              <UserPlus size={16} className="mr-2" /> Add New Borrower
+              <UserPlus size={16} className="mr-2" /> Onboard Borrower
            </Btn>
         }
       />
 
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <section className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <button 
-          onClick={() => setRiskFilter('ALL')}
-          className={`pro-card p-6 text-left transition-all ${riskFilter === 'ALL' ? 'ring-2 ring-primary border-primary bg-primary/5' : 'bg-white'}`}
+          onClick={() => setKycFilter('ALL')}
+          className={`pro-card p-6 text-left transition-all ${kycFilter === 'ALL' ? 'ring-2 ring-primary border-primary bg-primary/5' : 'bg-white'}`}
         >
-          <StatCard label="Total Borrowers" value={borrowers.length} icon={Users} color="text-primary" />
+          <StatCard label="All Registered Users" value={borrowers.length} icon={Users} color="text-primary" />
         </button>
         <button 
-          onClick={() => setRiskFilter('GREEN')}
-          className={`pro-card p-6 text-left transition-all ${riskFilter === 'GREEN' ? 'ring-2 ring-emerald-500 border-emerald-500 bg-emerald-500/5' : 'bg-white'}`}
+          onClick={() => setKycFilter('pending')}
+          className={`pro-card p-6 text-left transition-all ${kycFilter === 'pending' ? 'ring-2 ring-amber-500 border-amber-500 bg-amber-500/5' : 'bg-white'}`}
         >
-          <StatCard label="Low Risk Node" value={borrowers.filter(b => b.risk === 'GREEN').length} icon={ShieldCheck} color="text-emerald-500" />
+          <StatCard label="Pending KYC" value={borrowers.filter(b => b.kyc === 'pending').length} icon={Clock3} color="text-amber-500" />
         </button>
         <button 
-          onClick={() => setRiskFilter('RED')}
-          className={`pro-card p-6 text-left transition-all ${riskFilter === 'RED' ? 'ring-2 ring-rose-500 border-rose-500 bg-rose-500/5' : 'bg-white'}`}
+          onClick={() => setKycFilter('approved')}
+          className={`pro-card p-6 text-left transition-all ${kycFilter === 'approved' ? 'ring-2 ring-emerald-500 border-emerald-500 bg-emerald-500/5' : 'bg-white'}`}
         >
-          <StatCard label="Critical Risk" value={borrowers.filter(b => b.risk === 'RED').length} icon={AlertTriangle} color="text-rose-500" />
+          <StatCard label="Approved KYC" value={borrowers.filter(b => b.kyc === 'approved').length} icon={ShieldCheck} color="text-emerald-500" />
+        </button>
+        <button 
+          onClick={() => setKycFilter('rejected')}
+          className={`pro-card p-6 text-left transition-all ${kycFilter === 'rejected' ? 'ring-2 ring-rose-500 border-rose-500 bg-rose-500/5' : 'bg-white'}`}
+        >
+          <StatCard label="Rejected KYC" value={borrowers.filter(b => b.kyc === 'rejected').length} icon={AlertTriangle} color="text-rose-500" />
         </button>
       </section>
 
-      {kycStatus === 'pending_admin_review' && (
-        <div className="pro-card p-6 border border-amber-200 bg-amber-50 flex flex-col sm:flex-row items-center justify-between gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
-          <div className="flex items-center gap-4 text-center sm:text-left">
-             <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center shrink-0 mx-auto sm:mx-0">
-                <AlertTriangle size={24} />
-             </div>
-             <div>
-                <h3 className="text-base font-bold text-amber-900 tracking-tight">Pending KYC Approval</h3>
-                <p className="text-xs font-medium text-amber-700 mt-0.5">A borrower has uploaded identity documents. Review required.</p>
-             </div>
-          </div>
-          <Btn onClick={() => setKycModal(true)} className="!bg-amber-500 hover:!bg-amber-600 text-white border-none shadow-lg shadow-amber-500/20 whitespace-nowrap w-full sm:w-auto">
-             Review Documents
-          </Btn>
-        </div>
-      )}
-
       <div className="space-y-6">
         <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 px-1">
-          <div className="flex flex-col sm:flex-row items-center gap-4 flex-1 xl:max-w-2xl">
+          <div className="flex flex-col sm:flex-row items-center gap-4 flex-1 xl:max-w-3xl">
             <div className="relative flex-1 w-full group">
               <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-primary transition-colors" size={16} />
               <input 
@@ -146,31 +170,30 @@ export default function AdminBorrowers() {
                 onChange={e => setSearch(e.target.value)}
               />
             </div>
+            
+            {/* KYC Filters */}
             <div className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200 gap-1 sm:w-auto w-full">
-              {[['ALL','All'],['GREEN','Stable'],['AMBER','Medium'],['RED','Risk']].map(([val, label]) => (
+              {[['ALL','All KYC'],['pending','Pending'],['approved','Approved'],['rejected','Rejected']].map(([val, label]) => (
                 <button
                   key={val}
-                  onClick={() => setRiskFilter(val)}
-                  className={`px-5 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${
-                    riskFilter === val ? 'bg-white text-primary shadow-sm' : 'text-slate-400 hover:text-slate-600'
+                  onClick={() => setKycFilter(val)}
+                  className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${
+                    kycFilter === val ? 'bg-white text-primary shadow-sm' : 'text-slate-400 hover:text-slate-600'
                   }`}>
                   {label}
                 </button>
               ))}
             </div>
           </div>
-          <Btn variant="outline" size="md">
-             <Activity size={16} className="mr-2" /> Performance Audit
-          </Btn>
         </div>
 
         <ProTable headers={[
-          { label: 'Borrower Entity' },
-          { label: 'Contact Node' },
-          { label: 'Lead Status' },
-          { label: 'Risk Integrity' },
+          { label: 'Borrower Name / Email' },
+          { label: 'NRC ID' },
+          { label: 'Status' },
           { label: 'KYC Status' },
-          { label: 'Action', className: 'text-right' }
+          { label: 'Risk Rating' },
+          { label: 'Action & Controls', className: 'text-right' }
         ]}>
           {filtered.map((b) => (
             <tr key={b.id} className="group hover:bg-slate-50/50 transition-colors">
@@ -181,202 +204,169 @@ export default function AdminBorrowers() {
                     </div>
                     <div>
                        <p className="text-[13px] font-bold text-slate-800 transition-colors group-hover:text-primary">{b.name}</p>
-                       <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest mt-0.5">{b.email}</p>
+                       <p className="text-[10px] font-bold text-slate-300 mt-0.5">{b.email}</p>
                     </div>
                  </div>
               </td>
               <td className="px-6 py-5">
-                 <p className="text-[13px] font-bold text-slate-500">{b.phone}</p>
+                 <p className="text-[12px] font-bold text-slate-600">{b.nrc}</p>
               </td>
               <td className="px-6 py-5">
-                 <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
-                   b.leadStatus === 'HOT LEAD' ? 'bg-orange-50 text-orange-600 border border-orange-100' :
-                   b.leadStatus === 'NEW SIGNUP' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
-                   'bg-slate-50 text-slate-500 border border-slate-100'
+                 <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider ${
+                   b.status === 'suspended' ? 'bg-rose-50 text-rose-600 border border-rose-100' : 'bg-emerald-50 text-emerald-600 border border-emerald-100'
                  }`}>
-                   {b.leadStatus}
+                   {b.status === 'suspended' ? 'Suspended' : 'Active'}
+                 </span>
+              </td>
+              <td className="px-6 py-5">
+                 <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider ${
+                   b.kyc === 'approved' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
+                   b.kyc === 'pending' ? 'bg-amber-50 text-amber-600 border border-amber-100' :
+                   'bg-rose-50 text-rose-600 border border-rose-100'
+                 }`}>
+                   {b.kyc}
                  </span>
               </td>
               <td className="px-6 py-5">
                  <RiskBadge risk={b.risk} />
               </td>
-              <td className="px-6 py-5">
-                 <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
-                   b.id === 'BOR-101' && kycStatus === 'pending_admin_review' ? 'bg-amber-50 text-amber-600 border border-amber-100' :
-                   b.id === 'BOR-101' && kycStatus === 'verified' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
-                   'bg-slate-50 text-slate-400 border border-slate-100'
-                 }`}>
-                   {b.id === 'BOR-101' && kycStatus === 'pending_admin_review' ? 'PENDING REVIEW' :
-                    b.id === 'BOR-101' && kycStatus === 'verified' ? 'VERIFIED' :
-                    'MISSING'}
-                 </span>
-              </td>
-              <td className="px-6 py-5 text-right flex items-center justify-end gap-2">
-                 {b.id === 'BOR-101' && kycStatus === 'pending_admin_review' && (
-                    <Btn size="sm" className="!bg-amber-500 hover:!bg-amber-600 shadow-amber-500/20" onClick={() => setKycModal(true)}>Review KYC</Btn>
-                 )}
-                 <Btn variant="outline" size="sm" onClick={() => setViewModal(b)}>Profile</Btn>
+              <td className="px-6 py-5 text-right">
+                <div className="flex items-center justify-end gap-2">
+                  {(b.kyc === 'pending' || b.kyc === 'rejected') && (
+                     <Btn size="sm" variant="primary" className="!py-1.5 !px-3 text-[9px]" onClick={() => handleOpenKycReview(b)}>
+                       Review KYC
+                     </Btn>
+                  )}
+                  <Btn variant="outline" size="sm" className="!py-1.5 !px-3 text-[9px]" onClick={() => setViewModal(b)}>
+                    Dossier
+                  </Btn>
+                  <Btn 
+                    variant={b.status === 'suspended' ? 'success' : 'danger'} 
+                    size="sm" 
+                    className="!py-1.5 !px-3 text-[9px]" 
+                    onClick={() => handleToggleSuspend(b.id)}
+                  >
+                    {b.status === 'suspended' ? 'Reactivate' : 'Suspend'}
+                  </Btn>
+                </div>
               </td>
             </tr>
           ))}
         </ProTable>
       </div>
 
-      <Modal isOpen={!!viewModal} onClose={() => setViewModal(null)} title="Client Dossier">
+      {/* CLIENT DOSSIER & LOAN HISTORY MODAL */}
+      <Modal isOpen={!!viewModal} onClose={() => setViewModal(null)} title="Client Dossier Overview">
         {viewModal && (
-          <div className="space-y-8 animate-in fade-in duration-500">
-            <div className="p-8 bg-slate-50 rounded-3xl border border-slate-100 text-center relative overflow-hidden">
-               <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl opacity-50" />
-               <div className="w-20 h-20 rounded-2xl bg-white shadow-sm flex items-center justify-center mx-auto mb-4 text-slate-900 font-bold text-2xl border border-slate-100 uppercase">
+          <div className="space-y-6 text-left">
+            <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 text-center relative overflow-hidden">
+               <div className="w-16 h-16 rounded-2xl bg-white shadow-sm flex items-center justify-center mx-auto mb-4 text-slate-900 font-bold text-2xl border border-slate-100 uppercase">
                   {viewModal.name[0]}
                </div>
-               <h4 className="text-2xl font-extrabold text-slate-900 tracking-tight">{viewModal.name}</h4>
+               <h4 className="text-xl font-extrabold text-slate-900 tracking-tight">{viewModal.name}</h4>
                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-1">{viewModal.email}</p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-               {[
-                 { label: 'Mobile Node', value: viewModal.phone, icon: Phone, color: 'text-primary' },
-                 { label: 'NRC ID Registry', value: viewModal.nrc, icon: Hash, color: 'text-indigo-500' },
-                 { label: 'Birth Registry', value: formatDateDDMMYYYY(viewModal.dob), icon: Calendar, color: 'text-amber-500' },
-                 { label: 'Residential Node', value: viewModal.address, icon: MapPin, color: 'text-rose-500' },
-               ].map((item, i) => (
-                 <div key={i} className="p-5 bg-slate-50 rounded-2xl border border-slate-100 space-y-1">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{item.label}</p>
-                    <p className="text-xs font-bold text-slate-800">{item.value}</p>
-                 </div>
-               ))}
+            <div className="grid grid-cols-2 gap-4 text-xs font-bold text-slate-700">
+               <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                  <p className="text-[9px] font-bold text-slate-400 uppercase">WhatsApp / Contact</p>
+                  <p className="text-slate-800 mt-1">{viewModal.phone}</p>
+               </div>
+               <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                  <p className="text-[9px] font-bold text-slate-400 uppercase">NRC Registry ID</p>
+                  <p className="text-slate-800 mt-1">{viewModal.nrc}</p>
+               </div>
             </div>
 
-            <Divider text="CRM Intelligence" />
+            {/* USER LOAN HISTORY SECTION */}
             <div className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                 <FormField label="Lead Status">
-                    <select className="premium-input h-12 text-[11px] font-bold uppercase tracking-widest" value={viewModal.leadStatus}>
-                       <option value="NEW SIGNUP">New Signup</option>
-                       <option value="CONTACTED">Contacted</option>
-                       <option value="HOT LEAD">Hot Lead</option>
-                       <option value="COLD">Cold / No Response</option>
-                    </select>
-                 </FormField>
-                 <FormField label="Next Follow-up">
-                    <Input type="date" value={viewModal.nextFollowUp} />
-                 </FormField>
-              </div>
-              <FormField label="Internal CRM Notes">
-                 <textarea 
-                    className="premium-input min-h-[100px] py-4 text-xs font-medium" 
-                    placeholder="Enter borrower interaction details..."
-                    defaultValue={viewModal.notes}
-                 />
-              </FormField>
+              <Divider text="Loan History Tracker" />
+              
+              {userLoanHistory.length === 0 ? (
+                <div className="p-6 border border-dashed border-slate-200 bg-slate-50/50 rounded-2xl text-center">
+                  <p className="text-xs text-slate-400 font-bold uppercase">No Loan Contracts Registered Under This User</p>
+                </div>
+              ) : (
+                <div className="border border-slate-100 rounded-2xl overflow-hidden bg-white shadow-inner max-h-[200px] overflow-y-auto">
+                  <table className="w-full text-left">
+                    <thead className="bg-slate-50 text-[9px] font-black uppercase text-slate-400 border-b border-slate-100">
+                      <tr>
+                        <th className="p-3">Contract ID</th>
+                        <th className="p-3">Principal</th>
+                        <th className="p-3">Remaining</th>
+                        <th className="p-3">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50 text-[11px] font-bold text-slate-700">
+                      {userLoanHistory.map(loan => (
+                        <tr key={loan.id} className="hover:bg-slate-50/50 transition-colors">
+                          <td className="p-3 text-slate-950">{loan.id}</td>
+                          <td className="p-3">${loan.principalAmount.toLocaleString()}</td>
+                          <td className="p-3 text-slate-500">${(loan.remainingPrincipal || 0).toLocaleString()}</td>
+                          <td className="p-3">
+                            <span className="uppercase text-[8px] font-black">{loan.status}</span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
 
-            <Divider text="Institutional Risk Standing" />
-            <div className={`p-6 rounded-2xl border flex items-center gap-4 ${
-              viewModal.risk === 'GREEN' ? 'bg-emerald-50 border-emerald-100' : 
-              viewModal.risk === 'AMBER' ? 'bg-amber-50 border-amber-100' : 
-              'bg-rose-50 border-rose-100'
-            }`}>
-               <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                 viewModal.risk === 'GREEN' ? 'bg-emerald-500 text-white' : 
-                 viewModal.risk === 'AMBER' ? 'bg-amber-500 text-white' : 
-                 'bg-rose-500 text-white'
-               }`}>
-                  <Zap size={20} />
-               </div>
-               <div>
-                  <p className="text-xs font-bold text-slate-900">Current Risk: {viewModal.risk}</p>
-                  <p className="text-[10px] font-medium text-slate-500 mt-1 italic leading-tight">
-                    This client has been analyzed by our institutional risk engine. 
-                    Calculated standing: {viewModal.risk === 'GREEN' ? 'Verified Stable' : viewModal.risk === 'AMBER' ? 'Standard Oversight' : 'High Priority Monitoring'}.
-                  </p>
-               </div>
+            <div className="flex gap-3 pt-4 border-t border-slate-100">
+              <Btn variant="outline" className="w-full h-12" onClick={() => setViewModal(null)}>Close Dossier</Btn>
             </div>
-
-            <Btn variant="outline" className="w-full h-14" onClick={() => setViewModal(null)}>Close Profile</Btn>
           </div>
         )}
       </Modal>
 
-      <Modal isOpen={kycModal} onClose={() => setKycModal(false)} title="KYC Document Verification">
-        <div className="space-y-6">
-           <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-             <p className="text-xs font-medium text-slate-500">Please review the uploaded identity documents before approving this borrower's KYC status.</p>
-             <div className="text-right">
-                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Document Type</p>
-                <p className="text-sm font-black text-slate-800">National ID</p>
-             </div>
-           </div>
-           
-           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">ID Front</p>
-                 <div className="w-full h-32 bg-slate-100 rounded-xl border-2 border-dashed border-slate-200 flex items-center justify-center relative overflow-hidden group">
-                    <img src="https://images.unsplash.com/photo-1633265486064-086b219458ce?auto=format&fit=crop&q=80&w=400&h=250" alt="ID Front" className="w-full h-full object-cover opacity-80 mix-blend-multiply" />
-                    <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                       <Btn size="sm" className="!bg-white !text-slate-900">View Full</Btn>
-                    </div>
+      {/* MANUAL KYC REVIEW MODAL */}
+      <Modal isOpen={kycModal} onClose={() => setKycModal(false)} title="KYC Verification Review">
+        {selectedKycBorrower && (
+          <div className="space-y-6 text-left">
+            <div className="p-5 bg-amber-50/60 border border-amber-100 text-amber-900 rounded-2xl flex items-start gap-3">
+              <AlertCircle className="text-amber-600 shrink-0 mt-0.5" size={20} />
+              <div>
+                <h4 className="text-sm font-extrabold uppercase">Manual Document Review</h4>
+                <p className="text-[11px] text-amber-700 mt-1">
+                  Reviewing files submitted by <strong>{selectedKycBorrower.name}</strong> (NRC: {selectedKycBorrower.nrc}).
+                </p>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-1">
+                 <p className="text-[9px] font-bold text-slate-400 uppercase">ID Front</p>
+                 <div className="h-24 bg-slate-100 rounded-xl border border-slate-200 flex items-center justify-center overflow-hidden">
+                    <img src="https://images.unsplash.com/photo-1633265486064-086b219458ce?auto=format&fit=crop&q=80&w=400&h=250" alt="ID Front" className="w-full h-full object-cover" />
                  </div>
               </div>
-              <div className="space-y-2">
-                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">ID Back</p>
-                 <div className="w-full h-32 bg-slate-100 rounded-xl border-2 border-dashed border-slate-200 flex items-center justify-center relative overflow-hidden group">
-                    <img src="https://images.unsplash.com/photo-1633265486064-086b219458ce?auto=format&fit=crop&q=80&w=400&h=250" alt="ID Back" className="w-full h-full object-cover opacity-80 mix-blend-multiply" />
-                    <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                       <Btn size="sm" className="!bg-white !text-slate-900">View Full</Btn>
-                    </div>
+              <div className="space-y-1">
+                 <p className="text-[9px] font-bold text-slate-400 uppercase">ID Back</p>
+                 <div className="h-24 bg-slate-100 rounded-xl border border-slate-200 flex items-center justify-center overflow-hidden">
+                    <img src="https://images.unsplash.com/photo-1633265486064-086b219458ce?auto=format&fit=crop&q=80&w=400&h=250" alt="ID Back" className="w-full h-full object-cover" />
                  </div>
               </div>
-              <div className="space-y-2">
-                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Proof of Address (1 of 2)</p>
-                 <div className="w-full h-32 bg-slate-100 rounded-xl border-2 border-dashed border-slate-200 flex items-center justify-center relative overflow-hidden group">
-                    <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm">
-                       <Database className="text-slate-400" size={20} />
-                    </div>
-                    <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                       <Btn size="sm" className="!bg-white !text-slate-900">View PDF</Btn>
-                    </div>
+              <div className="space-y-1">
+                 <p className="text-[9px] font-bold text-slate-400 uppercase">Address Proof</p>
+                 <div className="h-24 bg-slate-100 rounded-xl border border-slate-200 flex items-center justify-center">
+                    <FileText className="text-slate-450" size={24} />
                  </div>
               </div>
-              <div className="space-y-2">
-                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Proof of Address (2 of 2)</p>
-                 <div className="w-full h-32 bg-slate-100 rounded-xl border-2 border-dashed border-slate-200 flex items-center justify-center relative overflow-hidden group">
-                    <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm">
-                       <Database className="text-slate-400" size={20} />
-                    </div>
-                    <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                       <Btn size="sm" className="!bg-white !text-slate-900">View PDF</Btn>
-                    </div>
-                 </div>
-              </div>
-           </div>
-           
-           <div className="space-y-2">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Selfie Verification</p>
-              <div className="w-full h-40 bg-slate-100 rounded-xl border-2 border-dashed border-slate-200 flex items-center justify-center relative overflow-hidden group">
-                 <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=400&h=250" alt="Selfie" className="w-full h-full object-cover" />
-                 <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <Btn size="sm" className="!bg-white !text-slate-900">View Full</Btn>
-                 </div>
-              </div>
-           </div>
+            </div>
 
-           <div className="flex gap-4 pt-4">
-              <Btn variant="outline" className="flex-1" onClick={() => setKycModal(false)}>Reject</Btn>
-              <Btn className="flex-[2] !bg-emerald-500 hover:!bg-emerald-600 shadow-lg shadow-emerald-500/20" onClick={() => {
-                 localStorage.setItem('kycStatus', 'verified');
-                 setRiskFilter(prev => prev);
-                 setKycModal(false);
-                 showToast('KYC Verified. The borrower can now apply for loans.');
-              }}>Approve Documents</Btn>
-           </div>
-        </div>
+            <div className="flex gap-4 pt-4 border-t border-slate-100">
+               <Btn variant="danger" className="flex-1" onClick={() => handleKycVerdict('rejected')}>Reject KYC</Btn>
+               <Btn variant="success" className="flex-[2]" onClick={() => handleKycVerdict('approved')}>Approve KYC</Btn>
+            </div>
+          </div>
+        )}
       </Modal>
 
       <Modal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} title="Onboard New Borrower">
-         <form onSubmit={handleAddBorrower} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+         <form onSubmit={handleAddBorrower} className="space-y-6 text-left">
+            <div className="grid grid-cols-2 gap-4">
                <FormField label="Full Name">
                   <Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="Owner name" required />
                </FormField>
@@ -384,7 +374,7 @@ export default function AdminBorrowers() {
                   <Input value={form.nrc} onChange={e => setForm({...form, nrc: e.target.value})} placeholder="ID Number" required />
                </FormField>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4">
                <FormField label="Email Registry">
                   <Input type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} placeholder="client@mail.com" required />
                </FormField>
@@ -392,7 +382,7 @@ export default function AdminBorrowers() {
                   <Input value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} placeholder="+..." required />
                </FormField>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4">
                <FormField label="Birth Registry">
                   <Input type="date" value={form.dob} onChange={e => setForm({...form, dob: e.target.value})} required />
                </FormField>
@@ -418,7 +408,7 @@ export default function AdminBorrowers() {
       {toastMsg && createPortal(
         <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100000005] animate-in slide-in-from-bottom-10">
           <div className="bg-slate-900 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 min-w-[300px]">
-            <CheckCircle2 className="text-emerald-400" size={24} />
+            <CheckIcon className="text-emerald-400" size={24} />
             <span className="text-sm font-bold tracking-tight">{toastMsg}</span>
           </div>
         </div>,
@@ -427,6 +417,3 @@ export default function AdminBorrowers() {
     </div>
   );
 }
-
-
-
