@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   CreditCard, Wallet, Clock, Plus, FileText,
-  ChevronRight, ShieldCheck, Scale, Activity, Calendar, FileUp, AlertCircle
+  ChevronRight, ShieldCheck, Scale, Activity, Calendar, FileUp, AlertCircle, CheckCircle2
 } from 'lucide-react';
 import { PageTitle, StatusBadge, StatCard, Btn, ProTable, Modal, Divider } from '../../components/UI';
 import { calculateLoanDetails } from '../../utils/loanCalculator';
@@ -76,17 +76,21 @@ export default function BorrowerLoans() {
   const [viewModal, setViewModal] = useState(null);
   const [acceptTermsModal, setAcceptTermsModal] = useState(null);
   const [isAccepting, setIsAccepting] = useState(false);
+  const [error, setError] = useState('');
+  const [showDeclineConfirm, setShowDeclineConfirm] = useState(false);
+  const [successMsg, setSuccessMsg] = useState(null);
 
   const handleAccept = () => {
+    setError('');
     const signatureName = document.getElementById('digitalSigName')?.value || '';
     const isChecked = document.getElementById('digitalSigAgree')?.checked;
 
     if (!signatureName.trim()) {
-      alert('Please type your full name in the signature box to sign the contract.');
+      setError('Please type your full name in the signature box to sign the contract.');
       return;
     }
     if (!isChecked) {
-      alert('Please check the agreement box to accept the terms.');
+      setError('Please check the agreement box to accept the terms.');
       return;
     }
 
@@ -108,18 +112,23 @@ export default function BorrowerLoans() {
       
       setIsAccepting(false);
       setAcceptTermsModal(null);
-      alert('Congratulations! Your credit agreement has been digitally signed and accepted. Funds are now disbursed.');
+      setSuccessMsg({
+        title: 'Agreement Signed',
+        msg: 'Congratulations! Your credit agreement has been digitally signed and accepted. Funds are now disbursed.'
+      });
     }, 1200);
   };
 
-  const handleDecline = () => {
-    if (!confirm('Are you sure you want to DECLINE this offer? The credit application will be rejected.')) return;
-    
+  const confirmDecline = () => {
     updateLoan(acceptTermsModal.id, {
       status: 'rejected'
     });
+    setShowDeclineConfirm(false);
     setAcceptTermsModal(null);
-    alert('You have declined the credit offer. The application has been marked as rejected.');
+    setSuccessMsg({
+      title: 'Offer Declined',
+      msg: 'You have declined the credit offer. The application has been marked as rejected.'
+    });
   };
 
   const totalOutstanding = useMemo(() => {
@@ -657,6 +666,14 @@ export default function BorrowerLoans() {
                      {!isExpired && (
                         <div className="pt-6 border-t border-slate-200 space-y-4">
                            <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] italic pb-1">V. Digital Consent Signature</h5>
+                           
+                           {error && (
+                             <div className="p-3 bg-rose-50 border border-rose-100 rounded-xl flex items-start gap-2">
+                               <AlertCircle size={14} className="text-rose-500 shrink-0 mt-0.5" />
+                               <p className="text-[10px] font-bold text-rose-500 uppercase tracking-widest leading-relaxed">{error}</p>
+                             </div>
+                           )}
+
                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                               <div className="space-y-1">
                                  <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest px-1 italic">Type Your Full Name to Sign</label>
@@ -684,7 +701,7 @@ export default function BorrowerLoans() {
 
                   {/* Actions */}
                   <div className="flex flex-col sm:flex-row gap-4">
-                    <Btn variant="danger" onClick={handleDecline} className="w-full sm:flex-1 h-14">Decline Offer</Btn>
+                    <Btn variant="danger" onClick={() => setShowDeclineConfirm(true)} className="w-full sm:flex-1 h-14">Decline Offer</Btn>
                     {!isExpired && (
                        <Btn
                          onClick={handleAccept}
@@ -700,6 +717,41 @@ export default function BorrowerLoans() {
             })()}
           </div>
         )}
+      </Modal>
+
+      <Modal isOpen={showDeclineConfirm} onClose={() => setShowDeclineConfirm(false)} title="Confirm Decline">
+        <div className="p-4 sm:p-6 text-center space-y-6 animate-in zoom-in-95 duration-300">
+           <div className="w-16 h-16 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center mx-auto shadow-inner">
+             <AlertCircle size={32} />
+           </div>
+           <div>
+             <h3 className="text-xl font-black text-slate-900 tracking-tight mb-2">Decline Offer?</h3>
+             <p className="text-sm font-medium text-slate-500 leading-relaxed max-w-sm mx-auto">
+               Are you sure you want to <strong className="text-rose-500 font-bold">DECLINE</strong> this offer? The credit application will be rejected and this action cannot be undone.
+             </p>
+           </div>
+           <div className="flex flex-col sm:flex-row gap-4 pt-4 border-t border-slate-100">
+             <Btn variant="outline" className="flex-1 h-12" onClick={() => setShowDeclineConfirm(false)}>Cancel</Btn>
+             <Btn variant="danger" className="flex-1 h-12 shadow-lg shadow-rose-500/20" onClick={confirmDecline}>Confirm Decline</Btn>
+           </div>
+        </div>
+      </Modal>
+
+      <Modal isOpen={!!successMsg} onClose={() => setSuccessMsg(null)} title={successMsg?.title || 'Success'}>
+        <div className="p-4 sm:p-6 text-center space-y-6 animate-in zoom-in-95 duration-300">
+           <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center mx-auto shadow-inner">
+             <CheckCircle2 size={32} />
+           </div>
+           <div>
+             <h3 className="text-xl font-black text-slate-900 tracking-tight mb-2">{successMsg?.title}</h3>
+             <p className="text-sm font-medium text-slate-500 leading-relaxed max-w-sm mx-auto">
+               {successMsg?.msg}
+             </p>
+           </div>
+           <div className="pt-4 border-t border-slate-100">
+             <Btn className="w-full h-12 shadow-lg shadow-emerald-500/20" onClick={() => setSuccessMsg(null)}>Done</Btn>
+           </div>
+        </div>
       </Modal>
     </div>
   );

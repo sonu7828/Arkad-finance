@@ -47,7 +47,7 @@ export default function AdminLayout() {
                <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
                   <Landmark size={18} />
                </div>
-               <h1 className="text-sm font-black text-slate-900 uppercase tracking-tighter">ARKAD <span className="text-primary">FINANCE</span></h1>
+               <h1 className="text-sm font-black text-slate-900 uppercase tracking-tighter italic">ARKAD <span className="text-primary">FINANCE</span></h1>
             </div>
           </div>
 

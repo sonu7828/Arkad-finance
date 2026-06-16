@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { PageTitle, Btn, Input, Modal, FormField, Divider } from '../../components/UI';
 import { fileToDataUrl, loadSavedImage, saveImageLocally } from '../../utils/fileUploads';
+import KYCUploadModal from '../../components/KYCUploadModal';
 
 const DUMMY_USER = {
   name: 'John Borrower',
@@ -271,57 +272,17 @@ export default function BorrowerProfile() {
         </div>
       </Modal>
 
-      <Modal isOpen={kycModal} onClose={() => setKycModal(false)} title="KYC Document Upload">
-        <div className="space-y-6">
-          <p className="text-xs text-slate-500 font-medium">Please upload clear photos of your documents to complete your verification.</p>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <FormField label="1. ID Front Photo">
-              <label className="w-full h-16 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary transition-colors cursor-pointer bg-slate-50 relative overflow-hidden">
-                <input type="file" className="hidden" onChange={(e) => setKycFiles(f => ({...f, idFront: e.target.files?.[0]}))} />
-                <Upload size={18} className="mr-2" /> 
-                <span className="text-xs font-bold uppercase">{kycFiles.idFront ? kycFiles.idFront.name : 'Upload Front'}</span>
-              </label>
-            </FormField>
-            
-            <FormField label="2. ID Back Photo">
-              <label className="w-full h-16 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary transition-colors cursor-pointer bg-slate-50 relative overflow-hidden">
-                <input type="file" className="hidden" onChange={(e) => setKycFiles(f => ({...f, idBack: e.target.files?.[0]}))} />
-                <Upload size={18} className="mr-2" /> 
-                <span className="text-xs font-bold uppercase">{kycFiles.idBack ? kycFiles.idBack.name : 'Upload Back'}</span>
-              </label>
-            </FormField>
-            
-            <FormField label="3. Proof of Address">
-              <label className="w-full h-16 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary transition-colors cursor-pointer bg-slate-50 relative overflow-hidden">
-                <input type="file" className="hidden" onChange={(e) => setKycFiles(f => ({...f, addressProof: e.target.files?.[0]}))} />
-                <FileText size={18} className="mr-2" /> 
-                <span className="text-xs font-bold uppercase">{kycFiles.addressProof ? kycFiles.addressProof.name : 'Upload Document'}</span>
-              </label>
-            </FormField>
-
-            <FormField label="4. Additional Document (Optional / Selfie)">
-              <label className="w-full h-16 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary transition-colors cursor-pointer bg-slate-50 relative overflow-hidden">
-                <input type="file" className="hidden" onChange={(e) => setKycFiles(f => ({...f, additionalDoc: e.target.files?.[0]}))} />
-                <FileText size={18} className="mr-2" /> 
-                <span className="text-xs font-bold uppercase">{kycFiles.additionalDoc ? kycFiles.additionalDoc.name : 'Upload Document'}</span>
-              </label>
-            </FormField>
-          </div>
-
-          <div className="flex justify-end gap-3 pt-4">
-            <Btn variant="outline" className="!rounded-xl" onClick={() => setKycModal(false)}>Cancel</Btn>
-            <Btn className="!rounded-xl !px-10" onClick={() => { 
-              setKycStatus('pending_admin_review'); 
-              localStorage.setItem('kycStatus', 'pending_admin_review');
-              setKycModal(false); 
-              showToast('KYC Documents Submitted for Review'); 
-            }}>
-              Submit Documents
-            </Btn>
-          </div>
-        </div>
-      </Modal>
+      <KYCUploadModal 
+        isOpen={kycModal} 
+        onClose={() => setKycModal(false)} 
+        onSubmit={(data) => {
+          console.log("KYC Submitted Data:", data);
+          setKycStatus('pending_admin_review'); 
+          localStorage.setItem('kycStatus', 'pending_admin_review');
+          setKycModal(false); 
+          showToast('KYC Documents Submitted for Review'); 
+        }} 
+      />
 
       {/* Modern Toast */}
       {toastMsg && createPortal(

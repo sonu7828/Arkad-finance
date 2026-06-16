@@ -87,6 +87,8 @@ export default function AdminLoans() {
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [search, setSearch] = useState('');
   const [viewModal, setViewModal] = useState(null);
+  const [showDenyConfirm, setShowDenyConfirm] = useState(false);
+  const [showApproveSuccess, setShowApproveSuccess] = useState(false);
   
   const { loans: rawLoans, updateLoan } = useLoans();
 
@@ -304,17 +306,20 @@ export default function AdminLoans() {
 
     updateLoan(viewModal.id, approvedFields);
     setViewModal(null);
-    alert('Offer successfully calibrated and sent to the borrower for signature.');
+    setShowApproveSuccess(true);
   };
 
   const handleDeny = () => {
-    if(!window.confirm(`Are you sure you want to DENY this loan request? This action will set the status to REJECTED.`)) return;
+    setShowDenyConfirm(true);
+  };
 
+  const confirmDeny = () => {
     updateLoan(viewModal.id, {
       status: 'Rejected',
       disbursementDate: null,
       dueDate: null
     });
+    setShowDenyConfirm(false);
     setViewModal(null);
   };
 
@@ -967,6 +972,41 @@ export default function AdminLoans() {
             )}
           </div>
         )}
+      </Modal>
+
+      <Modal isOpen={showDenyConfirm} onClose={() => setShowDenyConfirm(false)} title="Confirm Denial">
+        <div className="p-4 sm:p-6 text-center space-y-6 animate-in zoom-in-95 duration-300">
+           <div className="w-16 h-16 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center mx-auto shadow-inner">
+             <AlertCircle size={32} />
+           </div>
+           <div>
+             <h3 className="text-xl font-black text-slate-900 tracking-tight mb-2">Deny Loan Application?</h3>
+             <p className="text-sm font-medium text-slate-500 leading-relaxed max-w-sm mx-auto">
+               Are you sure you want to <strong className="text-rose-500 font-bold">DENY</strong> this loan request? This action will set the status to REJECTED and cannot be easily undone.
+             </p>
+           </div>
+           <div className="flex flex-col sm:flex-row gap-4 pt-4 border-t border-slate-100">
+             <Btn variant="outline" className="flex-1 h-12" onClick={() => setShowDenyConfirm(false)}>Cancel</Btn>
+             <Btn variant="danger" className="flex-1 h-12 shadow-lg shadow-rose-500/20" onClick={confirmDeny}>Confirm Denial</Btn>
+           </div>
+        </div>
+      </Modal>
+
+      <Modal isOpen={showApproveSuccess} onClose={() => setShowApproveSuccess(false)} title="Offer Sent">
+        <div className="p-4 sm:p-6 text-center space-y-6 animate-in zoom-in-95 duration-300">
+           <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center mx-auto shadow-inner">
+             <CheckCircle2 size={32} />
+           </div>
+           <div>
+             <h3 className="text-xl font-black text-slate-900 tracking-tight mb-2">Offer Sent Successfully</h3>
+             <p className="text-sm font-medium text-slate-500 leading-relaxed max-w-sm mx-auto">
+               The offer has been successfully calibrated and sent to the borrower for signature.
+             </p>
+           </div>
+           <div className="pt-4 border-t border-slate-100">
+             <Btn className="w-full h-12 shadow-lg shadow-emerald-500/20" onClick={() => setShowApproveSuccess(false)}>Done</Btn>
+           </div>
+        </div>
       </Modal>
     </div>
   );

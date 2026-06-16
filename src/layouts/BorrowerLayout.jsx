@@ -39,7 +39,7 @@ export default function BorrowerLayout() {
             <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden w-9 h-9 flex items-center justify-center rounded-lg bg-slate-50 text-slate-600 hover:bg-slate-100 transition-all border border-slate-200">
               <Menu size={18} />
             </button>
-            <div className="flex items-center gap-2">
+            <div className="flex lg:hidden items-center gap-2">
                <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
                   <Landmark size={18} />
                </div>

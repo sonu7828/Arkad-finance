@@ -169,6 +169,7 @@ export default function AdminBorrowers() {
           { label: 'Contact Node' },
           { label: 'Lead Status' },
           { label: 'Risk Integrity' },
+          { label: 'KYC Status' },
           { label: 'Action', className: 'text-right' }
         ]}>
           {filtered.map((b) => (
@@ -199,7 +200,21 @@ export default function AdminBorrowers() {
               <td className="px-6 py-5">
                  <RiskBadge risk={b.risk} />
               </td>
+              <td className="px-6 py-5">
+                 <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
+                   b.id === 'BOR-101' && kycStatus === 'pending_admin_review' ? 'bg-amber-50 text-amber-600 border border-amber-100' :
+                   b.id === 'BOR-101' && kycStatus === 'verified' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
+                   'bg-slate-50 text-slate-400 border border-slate-100'
+                 }`}>
+                   {b.id === 'BOR-101' && kycStatus === 'pending_admin_review' ? 'PENDING REVIEW' :
+                    b.id === 'BOR-101' && kycStatus === 'verified' ? 'VERIFIED' :
+                    'MISSING'}
+                 </span>
+              </td>
               <td className="px-6 py-5 text-right flex items-center justify-end gap-2">
+                 {b.id === 'BOR-101' && kycStatus === 'pending_admin_review' && (
+                    <Btn size="sm" className="!bg-amber-500 hover:!bg-amber-600 shadow-amber-500/20" onClick={() => setKycModal(true)}>Review KYC</Btn>
+                 )}
                  <Btn variant="outline" size="sm" onClick={() => setViewModal(b)}>Profile</Btn>
               </td>
             </tr>
@@ -286,9 +301,15 @@ export default function AdminBorrowers() {
 
       <Modal isOpen={kycModal} onClose={() => setKycModal(false)} title="KYC Document Verification">
         <div className="space-y-6">
-           <p className="text-xs font-medium text-slate-500">Please review the uploaded identity documents before approving this borrower's KYC status.</p>
+           <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+             <p className="text-xs font-medium text-slate-500">Please review the uploaded identity documents before approving this borrower's KYC status.</p>
+             <div className="text-right">
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Document Type</p>
+                <p className="text-sm font-black text-slate-800">National ID</p>
+             </div>
+           </div>
            
-           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div className="space-y-2">
                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">ID Front</p>
                  <div className="w-full h-32 bg-slate-100 rounded-xl border-2 border-dashed border-slate-200 flex items-center justify-center relative overflow-hidden group">
@@ -308,7 +329,7 @@ export default function AdminBorrowers() {
                  </div>
               </div>
               <div className="space-y-2">
-                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Proof of Address</p>
+                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Proof of Address (1 of 2)</p>
                  <div className="w-full h-32 bg-slate-100 rounded-xl border-2 border-dashed border-slate-200 flex items-center justify-center relative overflow-hidden group">
                     <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm">
                        <Database className="text-slate-400" size={20} />
@@ -319,12 +340,24 @@ export default function AdminBorrowers() {
                  </div>
               </div>
               <div className="space-y-2">
-                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Selfie Verification</p>
+                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Proof of Address (2 of 2)</p>
                  <div className="w-full h-32 bg-slate-100 rounded-xl border-2 border-dashed border-slate-200 flex items-center justify-center relative overflow-hidden group">
-                    <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=250&h=250" alt="Selfie" className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                       <Btn size="sm" className="!bg-white !text-slate-900">View Full</Btn>
+                    <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm">
+                       <Database className="text-slate-400" size={20} />
                     </div>
+                    <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                       <Btn size="sm" className="!bg-white !text-slate-900">View PDF</Btn>
+                    </div>
+                 </div>
+              </div>
+           </div>
+           
+           <div className="space-y-2">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Selfie Verification</p>
+              <div className="w-full h-40 bg-slate-100 rounded-xl border-2 border-dashed border-slate-200 flex items-center justify-center relative overflow-hidden group">
+                 <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=400&h=250" alt="Selfie" className="w-full h-full object-cover" />
+                 <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <Btn size="sm" className="!bg-white !text-slate-900">View Full</Btn>
                  </div>
               </div>
            </div>

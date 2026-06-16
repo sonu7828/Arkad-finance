@@ -81,16 +81,16 @@ export default function LoanApplyForm() {
 
   if (submitted) {
     return (
-      <div className="max-w-3xl mx-auto py-32 px-6 text-center animate-in zoom-in-95 duration-1000">
-        <div className="pro-card p-12 sm:p-24 flex flex-col items-center group">
-           <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-[2rem] sm:rounded-[2.5rem] bg-emerald-500 text-white flex items-center justify-center shadow-xl shadow-emerald-500/20 mb-8 sm:mb-12">
-              <CheckCircle size={40} className="sm:w-14 sm:h-14" />
+      <div className="max-w-2xl mx-auto py-16 px-6 text-center animate-in zoom-in-95 duration-1000">
+        <div className="pro-card p-8 sm:p-12 flex flex-col items-center group">
+           <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-[2rem] bg-emerald-500 text-white flex items-center justify-center shadow-xl shadow-emerald-500/20 mb-6 sm:mb-8">
+              <CheckCircle size={40} className="sm:w-12 sm:h-12" />
            </div>
-           <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tighter uppercase italic mb-4 sm:mb-6 leading-none">Application Submitted</h2>
-           <p className="text-[10px] sm:text-[11px] font-black text-slate-400 uppercase tracking-widest max-w-sm leading-relaxed mb-10 sm:mb-16 italic">
+           <h2 className="text-xl sm:text-3xl font-black text-slate-900 tracking-tighter uppercase italic mb-3 sm:mb-4 leading-none">Application Submitted</h2>
+           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest max-w-xs leading-relaxed mb-8 sm:mb-10 italic">
              Your loan request has been successfully received. You will be notified once the review is complete.
            </p>
-           <Btn onClick={() => navigate('/borrower/dashboard')} className="w-full sm:w-auto !h-14 sm:!h-16 !px-16 italic font-black text-[10px] uppercase tracking-widest">
+           <Btn onClick={() => navigate('/borrower/dashboard')} className="w-full sm:w-auto !h-12 !px-12 italic font-black text-[10px] uppercase tracking-widest rounded-2xl">
              Return to Dashboard
            </Btn>
         </div>
@@ -99,12 +99,7 @@ export default function LoanApplyForm() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 sm:space-y-16 animate-in fade-in duration-1000 px-4 sm:px-0">
-      <PageTitle 
-        title="Loan Application" 
-        subtitle="Configure your loan requirements and bank details for processing." 
-      />
-
+    <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-1000 px-4 sm:px-0">
       {kycStatus === 'missing' ? (
         <div className="max-w-3xl mx-auto py-16 px-6 text-center">
           <div className="pro-card p-12 flex flex-col items-center">
@@ -122,41 +117,53 @@ export default function LoanApplyForm() {
         </div>
       ) : (
       <>
-      <div className="flex items-center justify-between px-2 sm:px-16 relative">
-        <div className="absolute top-5 sm:top-7 left-0 w-full h-[1px] sm:h-[2px] bg-slate-100 -z-10" />
-        {[
-          { id: 0, label: 'Reqs' },
-          { id: 1, label: 'Amount' },
-          { id: 2, label: 'Review' }
-        ].map(s => {
-          const isActive = step === s.id;
-          const isDone = step > s.id;
-          const canJump = s.id < step || (s.id === 1 && allChecked) || (step >= 1 && s.id <= 2 && allChecked);
-          
-          return (
-            <button 
-              key={s.id} 
-              type="button"
-              onClick={() => {
-                if (s.id === 0) setStep(0);
-                else if (allChecked) setStep(s.id);
-                else alert('Please complete requirements first');
-              }}
-              className={`flex flex-col items-center group outline-none transition-all duration-500 ${canJump ? 'cursor-pointer hover:scale-110' : 'cursor-not-allowed opacity-50'}`}
-            >
-              <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center transition-all duration-700 ${isActive ? 'bg-slate-900 text-white shadow-2xl rotate-6' : isDone ? 'bg-primary text-white' : 'bg-white text-slate-200 border border-slate-100'}`}>
-                {isDone ? <Check size={16} /> : <span className="text-xs sm:text-base font-black italic">{s.id}</span>}
-              </div>
-              <p className={`mt-3 sm:mt-5 text-[7px] sm:text-[9px] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] italic transition-colors ${isActive ? 'text-slate-900' : 'text-slate-300 group-hover:text-slate-400'}`}>{s.label}</p>
-            </button>
-          );
-        })}
+      <div className="flex flex-col md:flex-row md:items-center gap-6 md:gap-0 pb-4">
+        {/* 30% Width for Title */}
+        <div className="w-full md:w-[30%]">
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tighter uppercase italic leading-none">
+            Loan Application
+          </h1>
+        </div>
+
+        {/* 70% Width for Stepper */}
+        <div className="w-full md:w-[70%]">
+          <div className="flex items-center justify-between relative px-2 sm:px-10">
+            <div className="absolute top-5 sm:top-7 left-0 w-full h-[1px] sm:h-[2px] bg-slate-100 -z-10" />
+            {[
+              { id: 0, label: 'Reqs' },
+              { id: 1, label: 'Amount' },
+              { id: 2, label: 'Review' }
+            ].map(s => {
+              const isActive = step === s.id;
+              const isDone = step > s.id;
+              const canJump = s.id < step || (s.id === 1 && allChecked) || (step >= 1 && s.id <= 2 && allChecked);
+              
+              return (
+                <button 
+                  key={s.id} 
+                  type="button"
+                  onClick={() => {
+                    if (s.id === 0) setStep(0);
+                    else if (allChecked) setStep(s.id);
+                    else alert('Please complete requirements first');
+                  }}
+                  className={`flex flex-col items-center group outline-none transition-all duration-500 ${canJump ? 'cursor-pointer hover:scale-110' : 'cursor-not-allowed opacity-50'}`}
+                >
+                  <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center transition-all duration-700 ${isActive ? 'bg-slate-900 text-white shadow-2xl rotate-6' : isDone ? 'bg-primary text-white' : 'bg-white text-slate-900 border border-slate-200'}`}>
+                    {isDone ? <Check size={16} /> : <span className="text-xs sm:text-base font-black italic">{s.id}</span>}
+                  </div>
+                  <p className={`mt-3 sm:mt-5 text-[7px] sm:text-[9px] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] italic transition-colors ${isActive ? 'text-slate-900' : 'text-slate-500 group-hover:text-slate-700'}`}>{s.label}</p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
-      <div className="pro-card overflow-hidden min-h-[500px] sm:min-h-[550px] flex flex-col group">
-        <div className="p-6 sm:p-16 md:p-24 flex-1 flex flex-col">
+      <div className="pro-card overflow-hidden flex flex-col group">
+        <div className="p-6 sm:p-8 flex-1 flex flex-col">
           {step === 0 && (
-            <div className="space-y-8 sm:space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-700">
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700">
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div className="space-y-1">
                   <h2 className="text-lg sm:text-xl lg:text-2xl font-black text-slate-900 tracking-tighter uppercase italic leading-none">00 / Requirements & Eligibility</h2>
@@ -169,12 +176,12 @@ export default function LoanApplyForm() {
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 pt-2 sm:pt-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 pt-2">
                  {REQUIREMENTS.map((req, i) => {
                    const isChecked = !!checkedReqs[req.id];
                    return (
                     <button key={i} type="button" onClick={() => setCheckedReqs(prev => ({ ...prev, [req.id]: !prev[req.id] }))}
-                      className={`p-4 sm:p-6 border rounded-2xl sm:rounded-3xl space-y-3 sm:space-y-4 text-left transition-all duration-300 select-none outline-none ${isChecked ? 'bg-white border-primary shadow-xl shadow-primary/5 scale-[1.02]' : 'bg-slate-50 border-slate-100 hover:border-slate-200 active:scale-95'}`}>
+                      className={`p-4 sm:p-5 border rounded-2xl sm:rounded-3xl space-y-2 sm:space-y-3 text-left transition-all duration-300 select-none outline-none ${isChecked ? 'bg-white border-primary shadow-xl shadow-primary/5 scale-[1.02]' : 'bg-slate-50 border-slate-100 hover:border-slate-200 active:scale-95'}`}>
                       <div className="flex items-center justify-between">
                         <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl ${req.bg} ${req.color} flex items-center justify-center transition-transform ${isChecked ? 'rotate-6' : ''}`}>
                            <req.icon size={20} />
@@ -192,15 +199,15 @@ export default function LoanApplyForm() {
                  })}
               </div>
 
-              <div className={`p-4 sm:p-6 rounded-2xl sm:rounded-3xl border transition-all flex items-start gap-3 sm:gap-4 ${allChecked ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-primary/5 border-primary/10 text-primary'}`}>
+              <div className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all flex items-start gap-3 sm:gap-4 ${allChecked ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-primary/5 border-primary/10 text-primary'}`}>
                  {allChecked ? <CheckCircle size={16} className="shrink-0 mt-1" /> : <AlertCircle className="shrink-0 mt-1" size={16} />}
                  <p className="text-[10px] sm:text-[11px] font-bold italic leading-relaxed">
                    {allChecked ? "All requirements verified. Proceed with capital request." : "Please verify all prerequisites by clicking the cards above."}
                  </p>
               </div>
 
-              <div className="pt-4 sm:pt-6">
-                <Btn onClick={() => setStep(1)} disabled={!allChecked} className={`w-full !h-14 sm:!h-16 italic font-black uppercase tracking-widest rounded-2xl ${allChecked ? 'shadow-2xl shadow-primary/20' : 'opacity-40 grayscale pointer-events-none'}`}>
+              <div className="pt-2">
+                <Btn onClick={() => setStep(1)} disabled={!allChecked} className={`w-full !h-12 sm:!h-14 italic font-black uppercase tracking-widest rounded-2xl ${allChecked ? 'shadow-2xl shadow-primary/20' : 'opacity-40 grayscale pointer-events-none'}`}>
                   {allChecked ? 'Proceed to Application' : 'Requirements Pending'} <ArrowRight size={18} className="ml-4" />
                 </Btn>
               </div>
@@ -208,7 +215,7 @@ export default function LoanApplyForm() {
           )}
 
           {step === 1 && (
-            <div className="space-y-10 sm:space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700">
               <div className="space-y-1">
                 <h2 className="text-lg sm:text-xl lg:text-2xl font-black text-slate-900 tracking-tighter uppercase italic leading-none">01 / Loan Details</h2>
                 <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest italic leading-relaxed">Identity Profile &amp; Capital Scope</p>
@@ -221,13 +228,13 @@ export default function LoanApplyForm() {
 
                 {/* Custom input */}
                 <div className="relative group">
-                  <span className="absolute left-6 top-1/2 -translate-y-1/2 text-sm sm:text-base font-black text-slate-400 italic pointer-events-none tracking-widest">MXN $</span>
+                  <span className="absolute left-6 top-1/2 -translate-y-1/2 text-sm font-black text-slate-400 italic pointer-events-none tracking-widest">MXN $</span>
                   <input
                     type="number"
                     value={form.amount}
                     onChange={e => update('amount', e.target.value)}
                     onWheel={(e) => e.target.blur()}
-                    className="premium-input pl-20 sm:pl-24 bg-slate-50 border-slate-200 italic font-black text-xl sm:text-2xl h-16 sm:h-20 text-slate-900 focus:border-primary/40 transition-all w-full rounded-2xl sm:rounded-3xl shadow-inner"
+                    className="premium-input pl-20 bg-slate-50 border-slate-200 italic font-black text-xl sm:text-2xl h-14 text-slate-900 focus:border-primary/40 transition-all w-full rounded-2xl shadow-inner"
                     placeholder={settings.minLoanAmount.toString()}
                     min={settings.minLoanAmount}
                   />
@@ -246,42 +253,88 @@ export default function LoanApplyForm() {
 
               {/* Repayment Period */}
               <FormField label="Repayment Period">
-                <select value={form.duration} onChange={e => update('duration', Number(e.target.value))} className="premium-input appearance-none bg-slate-50 border-slate-100 italic font-bold h-12 sm:h-14">
+                <select value={form.duration} onChange={e => update('duration', Number(e.target.value))} className="premium-input appearance-none bg-slate-50 border-slate-100 italic font-bold h-12">
                   {LOAN_DURATION_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
                 </select>
               </FormField>
 
               <FormField label="Purpose of Loan">
-                <textarea rows="4" placeholder="How you plan to use these funds..." value={form.description} onChange={e => update('description', e.target.value)} className="premium-input bg-slate-50 border-slate-100 min-h-[120px] sm:min-h-[140px] resize-none italic font-bold p-4" />
+                <textarea rows="2" placeholder="How you plan to use these funds..." value={form.description} onChange={e => update('description', e.target.value)} className="premium-input bg-slate-50 border-slate-100 min-h-[60px] resize-none italic font-bold p-4" />
+              </FormField>
+
+              {/* Agent Code */}
+              <FormField label="Agent Code (Optional)">
+                <input 
+                  type="text" 
+                  placeholder="Enter agent referral code" 
+                  value={form.agentCode || ''} 
+                  onChange={e => update('agentCode', e.target.value)} 
+                  className="premium-input bg-slate-50 border-slate-100 italic font-bold h-12 w-full px-4 rounded-xl"
+                />
               </FormField>
 
               {/* Real-time Calculator */}
               {parseFloat(form.amount) > 0 && (
-                <div className="bg-slate-50 rounded-2xl p-6 border border-slate-200 mt-6 space-y-4">
-                  <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Loan Projection (Interest-Only)</h4>
-                  
-                  <div className="flex justify-between items-center pb-3 border-b border-slate-200 border-dashed">
-                    <span className="text-sm font-bold text-slate-600">Monthly Interest Payment</span>
-                    <span className="text-sm font-black text-slate-900">{formatMoney(calculateLoanDetails({ principal: form.amount, duration: form.duration, interestRate: 5 }).monthlyInterest)}</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center pb-3 border-b border-slate-200 border-dashed">
-                    <span className="text-sm font-bold text-slate-600">Initiation Fee (3%)</span>
-                    <span className="text-sm font-black text-rose-500">-{formatMoney(calculateLoanDetails({ principal: form.amount, duration: form.duration, interestRate: 5, initiationFee: 3 }).initiationFee)}</span>
-                  </div>
+                (() => {
+                  const amt = parseFloat(form.amount) || 0;
+                  const duration = form.duration || 12;
+                  const monthlyInterest = amt * 0.05;
+                  const initiationFee = amt * 0.03;
+                  const totalInterest = monthlyInterest * duration;
+                  const totalCost = totalInterest + initiationFee;
+                  const netFunds = amt - initiationFee;
+                  const totalToRepay = amt + totalInterest;
 
-                  <div className="flex justify-between items-center pt-2">
-                    <span className="text-sm font-black text-slate-900 uppercase">Total Net Funds Received</span>
-                    <span className="text-lg font-black text-emerald-600">{formatMoney(calculateLoanDetails({ principal: form.amount, duration: form.duration, interestRate: 5, initiationFee: 3 }).disbursementAmount)}</span>
-                  </div>
-                </div>
+                  return (
+                    <div className="bg-slate-50 rounded-2xl p-4 sm:p-5 border border-slate-200 mt-4 space-y-2">
+                      <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Real-Time Calculator</h4>
+                      
+                      <div className="flex justify-between items-center pb-2 border-b border-slate-200 border-dashed">
+                        <span className="text-sm font-bold text-slate-600">Loan Amount</span>
+                        <span className="text-sm font-black text-slate-900">{formatMoney(amt)}</span>
+                      </div>
+                      <div className="flex justify-between items-center pb-2 border-b border-slate-200 border-dashed">
+                        <span className="text-sm font-bold text-slate-600">Monthly Interest Rate</span>
+                        <span className="text-sm font-black text-slate-900">5.0%</span>
+                      </div>
+                      <div className="flex justify-between items-center pb-2 border-b border-slate-200 border-dashed">
+                        <span className="text-sm font-bold text-slate-600">Monthly Interest Payment</span>
+                        <span className="text-sm font-black text-slate-900">{formatMoney(monthlyInterest)}</span>
+                      </div>
+                      <div className="flex justify-between items-center pb-2 border-b border-slate-200 border-dashed">
+                        <span className="text-sm font-bold text-slate-600">Initiation Fee (3%)</span>
+                        <span className="text-sm font-black text-slate-900">{formatMoney(initiationFee)}</span>
+                      </div>
+                      <div className="flex justify-between items-center pb-2 border-b border-slate-200 border-dashed">
+                        <span className="text-sm font-bold text-slate-600">Total Interest ({duration} mo)</span>
+                        <span className="text-sm font-black text-slate-900">{formatMoney(totalInterest)}</span>
+                      </div>
+                      <div className="flex justify-between items-center pb-2 border-b border-slate-200 border-dashed">
+                        <span className="text-sm font-bold text-slate-600">Total Cost</span>
+                        <span className="text-sm font-black text-slate-900">{formatMoney(totalCost)}</span>
+                      </div>
+                      <div className="flex justify-between items-center pb-2 border-b border-slate-200 border-dashed">
+                        <span className="text-sm font-black text-slate-900 uppercase">Net Funds You Receive</span>
+                        <span className="text-sm font-black text-emerald-600">{formatMoney(netFunds)}</span>
+                      </div>
+                      <div className="flex justify-between items-center pb-2 border-b border-slate-200 border-dashed">
+                        <span className="text-sm font-bold text-slate-600">Interest/Month</span>
+                        <span className="text-sm font-black text-slate-900">{formatMoney(monthlyInterest)}</span>
+                      </div>
+                      <div className="flex justify-between items-center pt-2">
+                        <span className="text-sm font-black text-slate-900 uppercase">Total to Repay</span>
+                        <span className="text-lg font-black text-rose-600">{formatMoney(totalToRepay)}</span>
+                      </div>
+                    </div>
+                  );
+                })()
               )}
 
-              <div className="pt-6 sm:pt-10">
+              <div className="pt-4">
                 <Btn
                   onClick={() => setStep(2)}
                   disabled={!form.amount || parseFloat(form.amount) < settings.minLoanAmount}
-                  className="w-full !h-14 sm:!h-16 italic font-black uppercase tracking-widest rounded-2xl"
+                  className="w-full !h-12 sm:!h-14 italic font-black uppercase tracking-widest rounded-2xl"
                 >
                   Continue to Review <ArrowRight size={18} className="ml-4" />
                 </Btn>
@@ -290,20 +343,20 @@ export default function LoanApplyForm() {
           )}
 
           {step === 2 && (
-            <div className="space-y-10 sm:space-y-12 animate-in fade-in zoom-in-95 duration-700">
+            <div className="space-y-6 animate-in fade-in zoom-in-95 duration-700">
                <div className="space-y-1">
                 <h2 className="text-lg sm:text-xl lg:text-2xl font-black text-slate-900 tracking-tighter uppercase italic leading-none">02 / Final Review</h2>
                 <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest italic leading-relaxed">Confirm application parameters</p>
               </div>
-              <div className="pro-card p-8 sm:p-16 bg-slate-50 border border-slate-100 space-y-8 sm:space-y-12 text-center rounded-[2rem] sm:rounded-[2.5rem] relative overflow-hidden">
-                 <p className="text-[8px] sm:text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] sm:tracking-[0.4em] italic mb-4 sm:mb-8">Requested Amount</p>
+              <div className="pro-card p-6 sm:p-10 bg-slate-50 border border-slate-100 space-y-6 sm:space-y-8 text-center rounded-[2rem] relative overflow-hidden">
+                 <p className="text-[8px] sm:text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] sm:tracking-[0.4em] italic mb-2 sm:mb-4">Requested Amount</p>
                  <h4 className="text-3xl sm:text-4xl md:text-6xl font-black text-slate-900 tracking-tighter italic">{formatMoney(form.amount)}</h4>
-                 <div className="grid grid-cols-2 gap-6 sm:gap-10 max-w-sm mx-auto pt-6 sm:pt-10 text-left italic">
-                    <div className="space-y-1 sm:space-y-2">
+                 <div className="grid grid-cols-2 gap-4 sm:gap-6 max-w-sm mx-auto pt-4 sm:pt-6 text-left italic">
+                    <div className="space-y-1">
                        <p className="text-[8px] sm:text-[9px] font-black text-slate-300 uppercase tracking-widest">Period</p>
                        <p className="text-sm sm:text-base font-black text-slate-900">{form.duration} Mo</p>
                     </div>
-                    <div className="space-y-1 sm:space-y-2">
+                    <div className="space-y-1">
                        <p className="text-[8px] sm:text-[9px] font-black text-slate-300 uppercase tracking-widest">KYC Status</p>
                        <p className="text-[10px] sm:text-sm font-black text-emerald-500 uppercase">
                           Verified
@@ -311,8 +364,8 @@ export default function LoanApplyForm() {
                     </div>
                  </div>
               </div>
-              <div className="flex gap-4 sm:gap-6 pt-6 sm:pt-10">
-                <Btn variant="outline" onClick={() => setStep(1)} className="flex-1 !h-14 sm:!h-16 italic font-black uppercase tracking-widest text-[9px] sm:text-[10px] rounded-2xl">Modify</Btn>
+              <div className="flex gap-4 pt-4 sm:pt-6">
+                <Btn variant="outline" onClick={() => setStep(1)} className="flex-1 !h-12 sm:!h-14 italic font-black uppercase tracking-widest text-[9px] sm:text-[10px] rounded-2xl">Modify</Btn>
                 <Btn onClick={() => { 
                    setSubmitting(true); 
                    setTimeout(() => { 
@@ -333,7 +386,7 @@ export default function LoanApplyForm() {
                      setSubmitting(false); 
                      setSubmitted(true); 
                    }, 1000); 
-                 }} disabled={submitting} loading={submitting} className="flex-[2] !h-14 sm:!h-16 italic font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-primary/20 text-[9px] sm:text-[10px]">
+                 }} disabled={submitting} loading={submitting} className="flex-[2] !h-12 sm:!h-14 italic font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-primary/20 text-[9px] sm:text-[10px]">
                    Submit Application
                 </Btn>
               </div>
