@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Users, Search, Phone, Mail, TrendingUp, Globe, Activity, 
-  ChevronRight, Briefcase, ArrowRight, UserCheck, 
+import {
+  Users, Search, Phone, Mail, TrendingUp, Globe, Activity,
+  ChevronRight, Briefcase, ArrowRight, UserCheck,
   Download as DownloadIcon, ShieldCheck, X, Plus, DollarSign, Percent, AlertCircle, Clock,
   LayoutGrid, Table, Send, CheckCircle2, Wallet, Award
 } from 'lucide-react';
@@ -20,7 +20,7 @@ export default function AgentClients() {
   const navigate = useNavigate();
   const { loans, generateDummyPaymentsData } = useLoans();
   const { user: authUser } = useAuth();
-  
+
   const [viewMode, setViewMode] = useState('card'); // 'card' or 'table'
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedClient, setSelectedClient] = useState(null);
@@ -29,8 +29,8 @@ export default function AgentClients() {
 
   // Setup default referred loans/scenarios so they are always present for demo purposes
   const agentLoans = useMemo(() => {
-    let list = loans.filter(l => 
-      l.agent === authUser?.id || 
+    let list = loans.filter(l =>
+      l.agent === authUser?.id ||
       l.agent === 'AG-2024-CARLOS' ||
       l.agent === 'agent@arkad.com' ||
       (!l.agent || l.agent === 'None')
@@ -182,7 +182,7 @@ export default function AgentClients() {
     return agentLoans.map(cl => {
       let statusText = 'ON-TIME';
       let badgeColor = 'bg-emerald-50 text-emerald-600 border-emerald-100'; // Green
-      
+
       const statusLower = cl.status?.toLowerCase();
       if (statusLower === 'paid' || statusLower === 'completed') {
         statusText = 'PAID';
@@ -192,10 +192,10 @@ export default function AgentClients() {
         today.setHours(0, 0, 0, 0);
         const due = new Date(cl.dueDate);
         due.setHours(0, 0, 0, 0);
-        
+
         const diffTime = due.getTime() - today.getTime();
         const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-        
+
         if (diffDays === 0) {
           statusText = 'DUE TODAY';
           badgeColor = 'bg-emerald-50 text-emerald-600 border-emerald-100'; // Green
@@ -247,7 +247,7 @@ export default function AgentClients() {
 
     // Search
     if (searchQuery && activeTab !== 'EARNINGS') {
-      result = result.filter(l => 
+      result = result.filter(l =>
         (l.user?.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
         (l.id || '').toString().includes(searchQuery)
       );
@@ -311,7 +311,7 @@ export default function AgentClients() {
 
   return (
     <div className="space-y-8 pb-10 animate-in fade-in duration-700">
-      
+
       {/* Toast Alert */}
       {toastMessage && (
         <div className="fixed top-6 right-6 z-[100] max-w-sm bg-slate-900 text-white rounded-2xl p-4 shadow-2xl flex items-center gap-3 border border-slate-800 animate-in slide-in-from-top-6 duration-300">
@@ -332,20 +332,9 @@ export default function AgentClients() {
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mt-1 italic">Authorized Agent Client Portfolio</p>
         </div>
         <div className="flex items-center gap-3">
-<<<<<<< HEAD
           <Btn variant="outline" size="sm" onClick={handleExport} className="rounded-xl italic">
             <DownloadIcon size={14} className="mr-2" /> Export
           </Btn>
-=======
-          <Btn variant="outline" size="sm" onClick={generateDummyPaymentsData} className="rounded-xl italic flex items-center gap-2">
-            <Plus size={14} /> Generate Trial Data
-          </Btn>
-          {activeTab !== 'EARNINGS' && (
-            <Btn variant="outline" size="sm" onClick={handleExport} className="rounded-xl italic">
-              <DownloadIcon size={14} className="mr-2" /> Export
-            </Btn>
-          )}
->>>>>>> f5058e29913c4be25990c1f4d331246cbb016cf1
         </div>
       </div>
 
@@ -353,7 +342,7 @@ export default function AgentClients() {
       {activeTab !== 'EARNINGS' && (
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-in fade-in duration-300">
           <StatCard label="Network Size" value={agentLoans.length} icon={Users} trend="Active" />
-          <StatCard label="Total AUM" value={`MXN $${(totalAssets/1000).toFixed(1)}k`} icon={TrendingUp} trend="+4.2%" />
+          <StatCard label="Total AUM" value={`MXN $${(totalAssets / 1000).toFixed(1)}k`} icon={TrendingUp} trend="+4.2%" />
           <StatCard label="Performance" value="84%" icon={UserCheck} trend="High" />
           <StatCard label="Market" value="Mexico" icon={Globe} trend="Domestic" />
         </section>
@@ -366,28 +355,27 @@ export default function AgentClients() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${
-                activeTab === tab.id 
-                  ? 'bg-white text-primary shadow-sm border border-slate-200' 
+              className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${activeTab === tab.id
+                  ? 'bg-white text-primary shadow-sm border border-slate-200'
                   : 'text-slate-500 hover:text-slate-800 hover:bg-slate-200/50'
-              }`}
+                }`}
             >
               {tab.label}
             </button>
           ))}
         </div>
-        
+
         {activeTab !== 'EARNINGS' && (
           <div className="flex items-center gap-3 w-full md:w-auto justify-end">
             <div className="flex items-center bg-white p-1 rounded-xl border border-slate-200 shadow-sm">
-              <button 
+              <button
                 onClick={() => setViewMode('card')}
                 className={`p-1.5 rounded-lg transition-all ${viewMode === 'card' ? 'bg-[#0a3d62] text-white' : 'text-slate-400 hover:text-slate-600'}`}
                 title="Card Layout"
               >
                 <LayoutGrid size={16} />
               </button>
-              <button 
+              <button
                 onClick={() => setViewMode('table')}
                 className={`p-1.5 rounded-lg transition-all ${viewMode === 'table' ? 'bg-[#0a3d62] text-white' : 'text-slate-400 hover:text-slate-600'}`}
                 title="Table Layout"
@@ -398,7 +386,7 @@ export default function AgentClients() {
 
             <div className="relative w-full md:w-72 group">
               <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-primary transition-colors" />
-              <input 
+              <input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search network members..."
@@ -453,7 +441,7 @@ export default function AgentClients() {
               <p className="text-[10px] font-black text-slate-800 uppercase tracking-wider leading-none">Total Pending Commission</p>
               <p className="text-[9px] font-medium text-slate-400 italic">(waiting for collection)</p>
             </div>
-            
+
             <div className="pro-card p-6 bg-white border border-slate-100 shadow-sm rounded-3xl text-center space-y-2">
               <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-2">
                 <CheckCircle2 size={24} />
@@ -484,11 +472,10 @@ export default function AgentClients() {
                   <td className="font-bold text-slate-700">{row.rate}</td>
                   <td className="font-black text-slate-950">${row.commission.toFixed(2)}</td>
                   <td>
-                    <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${
-                      row.status === 'Paid' 
-                        ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
+                    <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${row.status === 'Paid'
+                        ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
                         : 'bg-amber-50 text-amber-600 border-amber-100'
-                    }`}>
+                      }`}>
                       {row.status}
                     </span>
                   </td>
@@ -501,8 +488,8 @@ export default function AgentClients() {
         viewMode === 'card' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredClients.map(cl => (
-              <div 
-                key={cl.id} 
+              <div
+                key={cl.id}
                 className="pro-card p-6 bg-white border border-slate-200/80 rounded-3xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-5 cursor-pointer"
                 onClick={() => setSelectedClient(cl)}
               >
@@ -545,8 +532,8 @@ export default function AgentClients() {
         ) : (
           <ProTable headers={['Member', 'Due Info', 'Exposure', 'Commission', 'Status', '']}>
             {filteredClients.map(cl => {
-               const isOverdue = cl.statusText.includes('OVERDUE');
-               return (
+              const isOverdue = cl.statusText.includes('OVERDUE');
+              return (
                 <tr key={cl.id} className="group cursor-pointer hover:bg-slate-50 transition-all" onClick={() => setSelectedClient(cl)}>
                   <td>
                     <div className="flex items-center gap-4">
@@ -585,8 +572,8 @@ export default function AgentClients() {
                   </td>
                   <td className="text-right">
                     {cl.statusText !== 'PAID' ? (
-                      <Btn 
-                        size="sm" 
+                      <Btn
+                        size="sm"
                         className="!py-1.5 !px-3 shadow-sm"
                         onClick={(e) => { e.stopPropagation(); handleRemind(cl); }}
                       >
@@ -610,44 +597,44 @@ export default function AgentClients() {
         {selectedClient && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex items-center gap-6 p-6 bg-slate-900 text-white rounded-[2rem] relative overflow-hidden shadow-2xl">
-               <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 blur-[40px] rounded-full translate-x-1/2 -translate-y-1/2" />
-               <div className="w-16 h-16 rounded-2xl bg-white text-slate-900 flex items-center justify-center text-xl font-black italic relative z-10">
-                  {selectedClient.user?.name[0]}
-               </div>
-               <div className="relative z-10">
-                  <h4 className="text-xl font-black tracking-tighter uppercase italic leading-none">{selectedClient.user?.name}</h4>
-                  <p className="text-[9px] font-black text-emerald-400 uppercase tracking-[0.2em] mt-2 flex items-center gap-2 italic">
-                     <ShieldCheck size={12} /> Institutional Verification Active
-                  </p>
-               </div>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 blur-[40px] rounded-full translate-x-1/2 -translate-y-1/2" />
+              <div className="w-16 h-16 rounded-2xl bg-white text-slate-900 flex items-center justify-center text-xl font-black italic relative z-10">
+                {selectedClient.user?.name[0]}
+              </div>
+              <div className="relative z-10">
+                <h4 className="text-xl font-black tracking-tighter uppercase italic leading-none">{selectedClient.user?.name}</h4>
+                <p className="text-[9px] font-black text-emerald-400 uppercase tracking-[0.2em] mt-2 flex items-center gap-2 italic">
+                  <ShieldCheck size={12} /> Institutional Verification Active
+                </p>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3 sm:gap-4">
-               {[
-                 { label: 'Registry ID', value: selectedClient.id, icon: Briefcase },
-                 { label: 'Net Exposure', value: formatMoney(selectedClient.principalAmount), icon: TrendingUp },
-                 { label: 'Commission Earned', value: formatMoney(selectedClient.commission), icon: DollarSign },
-                 { label: 'Status Node', value: selectedClient.statusText, icon: UserCheck },
-               ].map((item, i) => (
-                 <div key={i} className="p-5 rounded-2xl border border-slate-50 bg-white space-y-1.5 hover:border-primary/20 transition-all group">
-                    <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest flex items-center gap-2 italic">
-                       <item.icon size={10} className="group-hover:text-primary transition-colors" /> {item.label}
-                    </p>
-                    <p className="text-[11px] font-black text-slate-700 italic tracking-tight uppercase">{item.value}</p>
-                 </div>
-               ))}
+              {[
+                { label: 'Registry ID', value: selectedClient.id, icon: Briefcase },
+                { label: 'Net Exposure', value: formatMoney(selectedClient.principalAmount), icon: TrendingUp },
+                { label: 'Commission Earned', value: formatMoney(selectedClient.commission), icon: DollarSign },
+                { label: 'Status Node', value: selectedClient.statusText, icon: UserCheck },
+              ].map((item, i) => (
+                <div key={i} className="p-5 rounded-2xl border border-slate-50 bg-white space-y-1.5 hover:border-primary/20 transition-all group">
+                  <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest flex items-center gap-2 italic">
+                    <item.icon size={10} className="group-hover:text-primary transition-colors" /> {item.label}
+                  </p>
+                  <p className="text-[11px] font-black text-slate-700 italic tracking-tight uppercase">{item.value}</p>
+                </div>
+              ))}
             </div>
 
             <div className="grid grid-cols-2 gap-4 pt-4">
-               <Btn variant="outline" className="w-full !h-14 italic font-black uppercase tracking-widest rounded-2xl text-[9px]" onClick={() => setSelectedClient(null)}>Dismiss</Btn>
-               {selectedClient.statusText !== 'PAID' && (
-                 <Btn 
-                   className="w-full !h-14 italic font-black uppercase tracking-widest rounded-2xl text-[9px] shadow-lg"
-                   onClick={() => { handleRemind(selectedClient); setSelectedClient(null); }}
-                 >
-                   Send Payment Reminder
-                 </Btn>
-               )}
+              <Btn variant="outline" className="w-full !h-14 italic font-black uppercase tracking-widest rounded-2xl text-[9px]" onClick={() => setSelectedClient(null)}>Dismiss</Btn>
+              {selectedClient.statusText !== 'PAID' && (
+                <Btn
+                  className="w-full !h-14 italic font-black uppercase tracking-widest rounded-2xl text-[9px] shadow-lg"
+                  onClick={() => { handleRemind(selectedClient); setSelectedClient(null); }}
+                >
+                  Send Payment Reminder
+                </Btn>
+              )}
             </div>
           </div>
         )}
@@ -662,7 +649,7 @@ export default function AgentClients() {
             <p className="text-slate-700 font-bold text-sm">No clients are currently registered in your network!</p>
             <p className="text-slate-400 text-xs mt-1">To trial/test the Network Registry features, generate sample trial data.</p>
           </div>
-          <Btn 
+          <Btn
             onClick={generateDummyPaymentsData}
             className="mt-2 flex items-center gap-2 shadow-lg shadow-primary/20 rounded-xl"
             size="sm"

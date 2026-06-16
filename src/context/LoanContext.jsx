@@ -274,19 +274,19 @@ export function LoanProvider({ children }) {
         },
         principalAmount: 7500,
         remainingPrincipal: 6000,
-        duration: 12,
+        duration: 5,
         status: 'Active',
-        createdAt: '2026-04-10',
+        createdAt: '2025-11-10',
         interestRate: 10,
         method: 'BANK_TRANSFER',
-        disbursementDate: '2026-04-10',
+        disbursementDate: '2025-11-10',
         dueDate: todayStr,
         unpaidInterest: 750,
         payments: [
-          { id: 'PAY-H-01', dueDate: '2026-04-15', date: '2026-04-15', amount: 150, status: 'PAID', type: 'interest' },
-          { id: 'PAY-H-02', dueDate: '2026-05-15', date: '2026-05-16', amount: 150, status: 'PAID', type: 'interest' },
-          { id: 'PAY-H-03', dueDate: '2026-06-15', date: null, amount: 150, status: 'PENDING', type: 'interest' },
-          { id: 'PAY-H-04', dueDate: '2026-07-15', date: null, amount: 150, status: 'DUE SOON', type: 'interest' }
+          { id: 'PAY-H-01', date: '2025-12-13', amount: 150, status: 'PAID', type: 'interest' }, // 3 days late (due 12-10)
+          { id: 'PAY-H-02', date: '2026-01-15', amount: 150, status: 'PAID', type: 'interest' }, // 5 days late (due 01-10)
+          { id: 'PAY-H-03', date: '2026-02-10', amount: 150, status: 'PAID', type: 'interest' }, // 0 days late (due 02-10)
+          { id: 'PAY-H-04', date: '2026-03-22', amount: 150, status: 'PAID', type: 'interest' }  // 12 days late (due 03-10)
         ]
       },
       {
@@ -298,23 +298,15 @@ export function LoanProvider({ children }) {
         principalAmount: 1800,
         remainingPrincipal: 0,
         principalPaid: 1800,
-        duration: 12,
+        duration: 3,
         status: 'Completed',
-        createdAt: '2025-04-15',
+        createdAt: '2025-08-01',
         interestRate: 0,
-        method: 'BANK_TRANSFER',
-        disbursementDate: '2025-04-15',
-        dueDate: '2026-04-15',
+        method: 'MOBILE_MONEY',
+        disbursementDate: '2025-08-01',
+        dueDate: null,
         unpaidInterest: 0,
         payments: [
-          { id: 'PAY-C-01', dueDate: '2025-05-15', date: '2025-05-15', amount: 150, status: 'PAID', type: 'interest' },
-          { id: 'PAY-C-02', dueDate: '2025-06-15', date: '2025-06-15', amount: 150, status: 'PAID', type: 'interest' },
-          { id: 'PAY-C-03', dueDate: '2025-07-15', date: '2025-07-15', amount: 150, status: 'PAID', type: 'interest' },
-          { id: 'PAY-C-04', dueDate: '2025-08-15', date: '2025-08-15', amount: 150, status: 'PAID', type: 'interest' },
-          { id: 'PAY-C-05', dueDate: '2025-09-15', date: '2025-09-15', amount: 150, status: 'PAID', type: 'interest' },
-          { id: 'PAY-C-06', dueDate: '2025-10-15', date: '2025-10-15', amount: 150, status: 'PAID', type: 'interest' },
-          { id: 'PAY-C-07', dueDate: '2025-11-15', date: '2025-11-15', amount: 150, status: 'PAID', type: 'interest' },
-          { id: 'PAY-C-08', dueDate: '2025-12-15', date: '2025-12-15', amount: 150, status: 'PAID', type: 'interest' },
           { id: 'PAY-C-09', dueDate: '2026-01-15', date: '2026-01-15', amount: 150, status: 'PAID', type: 'interest' },
           { id: 'PAY-C-10', dueDate: '2026-02-15', date: '2026-02-15', amount: 150, status: 'PAID', type: 'interest' },
           { id: 'PAY-C-11', dueDate: '2026-03-15', date: '2026-03-15', amount: 150, status: 'PAID', type: 'interest' },

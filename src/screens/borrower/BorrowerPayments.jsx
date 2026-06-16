@@ -293,6 +293,23 @@ export default function BorrowerPayments() {
           {p.date ? formatShortDate(p.date) : '-'}
         </span>
       )
+    },
+    {
+      header: 'Days Late',
+      render: (p) => {
+        if (!p.date || !p.dueDate) return <span className="text-slate-400 font-medium">-</span>;
+        const due = new Date(p.dueDate);
+        due.setHours(0,0,0,0);
+        const paid = new Date(p.date);
+        paid.setHours(0,0,0,0);
+        const diffTime = paid.getTime() - due.getTime();
+        const diffDays = Math.max(0, Math.round(diffTime / (1000 * 60 * 60 * 24)));
+        return (
+          <span className="text-sm font-bold text-slate-700">
+            {diffDays}
+          </span>
+        );
+      }
     }
   ];
 

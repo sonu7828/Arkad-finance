@@ -29,10 +29,10 @@ export const calculateLoanDetails = ({
   const iRate = interestRate !== undefined ? parseFloat(interestRate) : settings.interestRate;
   const carriedDue = parseFloat(carriedForwardDue) || 0;
   
-  // 2. Base Interest (Monthly Simple Interest)
-  const monthlyInterest = round(p * (iRate / 100));
-  const totalInterest = round(monthlyInterest * d);
-  // 3. Interest-Only Rule: Monthly Payment = (Principal × Monthly Interest Rate) + Any Previous Shortfalls
+  // 2. Base Interest (Monthly Simple Interest) - Dynamically calculated on OUTSTANDING principal
+  const monthlyInterest = round(currP * (iRate / 100));
+  const totalInterest = round(p * (iRate / 100) * d); // Estimated total upfront based on original principal
+  // 3. Interest-Only Rule: Monthly Payment = (Outstanding Principal × Monthly Interest Rate) + Any Previous Shortfalls
   const monthlyPaymentCurrent = round(monthlyInterest + carriedDue);
 
   // 4. Initiation Fee (Deducted from disbursement) - Now a % of Principal
@@ -51,11 +51,10 @@ export const calculateLoanDetails = ({
 
   // 7. Delinquent Interest (Penalty)
   let delinquentPenalty = 0;
-  if (!isPaid && daysLate > settings.graceDays) {
-    const daysPastGrace = daysLate - settings.graceDays;
-    const monthlyPenaltyRate = parseFloat(settings.delinquentInterestRate) || 12; // 12% default from PRD
-    const dailyPenaltyRate = (monthlyPenaltyRate / 100) / 30;
-    delinquentPenalty = round(monthlyPaymentCurrent * dailyPenaltyRate * daysPastGrace);
+  if (!isPaid && daysLate > 0) {
+    const annualPenaltyRate = parseFloat(settings.delinquentInterestRate) || 12; // e.g. 12% annual
+    // Formula: (Outstanding Balance × Delinquent Rate % × Days Overdue) / 30
+    delinquentPenalty = round((currP * (annualPenaltyRate / 100) * daysLate) / 30);
   }
 
   // 8. Total Owed (Principal + Total Interest + Penalties)
