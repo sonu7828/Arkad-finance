@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const DEMO_MOCK_USERS = {
   'admin@arkad.com': { id: 'u1', name: 'Supreme Administrator', role: 'admin', password: 'arkad123' },
-  'agent@arkad.com': { id: 'u2', name: 'Elite Partner Node', role: 'agent', password: 'arkad123' },
+  'agent@arkad.com': { id: 'AG-2024-CARLOS', name: 'Carlos Menendez', role: 'agent', password: 'arkad123', commissionRate: '10%' },
   'borrower@arkad.com': { id: 'u3', name: 'Verified Capital User', role: 'borrower', password: 'arkad123' },
   'staff@arkad.com': { id: 'u4', name: 'Operations Officer', role: 'staff', password: 'arkad123' }
 };
@@ -20,9 +20,17 @@ function getInitialUser() {
   const role = localStorage.getItem('role');
   const name = localStorage.getItem('userName');
   const email = localStorage.getItem('userEmail');
+  const id = localStorage.getItem('userId');
+  const commissionRate = localStorage.getItem('userCommissionRate');
   
   if (token && role) {
-    return { role: normalizeRole(role), name: name || 'Test User', email: email || '' };
+    return { 
+      role: normalizeRole(role), 
+      name: name || 'Test User', 
+      email: email || '',
+      id: id || '',
+      commissionRate: commissionRate || ''
+    };
   }
   return null;
 }
@@ -50,8 +58,16 @@ export function AuthProvider({ children }) {
           localStorage.setItem('role', foundUser.role);
           localStorage.setItem('userName', foundUser.name);
           localStorage.setItem('userEmail', email);
+          localStorage.setItem('userId', foundUser.id || '');
+          localStorage.setItem('userCommissionRate', foundUser.commissionRate || '');
 
-          setUser({ role: normalizeRole(foundUser.role), name: foundUser.name, email: email });
+          setUser({ 
+            role: normalizeRole(foundUser.role), 
+            name: foundUser.name, 
+            email: email,
+            id: foundUser.id || '',
+            commissionRate: foundUser.commissionRate || ''
+          });
           setLoading(false);
           resolve({ success: true, role: foundUser.role });
         } else {
@@ -67,6 +83,8 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('role');
     localStorage.removeItem('userName');
     localStorage.removeItem('userEmail');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('userCommissionRate');
     setUser(null);
     window.location.href = '/login';
   };

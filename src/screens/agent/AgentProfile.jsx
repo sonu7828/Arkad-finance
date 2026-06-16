@@ -21,20 +21,22 @@ const DUMMY_AGENT = {
 
 export default function AgentProfile() {
   const navigate = useNavigate();
-  const { user: authUser } = useAuth();
+  const { user: authUser, logout } = useAuth();
   const [editModal, setEditModal] = useState(false);
   
-  // Use session name if available, else 'Victor Banda'
+  // Use session name/id/commission if available
   const user = {
     ...DUMMY_AGENT,
-    name: authUser?.name || 'Victor Banda',
-    id: authUser?.id || 'AGT-10294'
+    name: authUser?.name || 'Carlos Menendez',
+    id: authUser?.id || 'AG-2024-CARLOS',
+    email: authUser?.email || 'agent@arkad.com',
+    commissionRate: authUser?.commissionRate || '10%'
   };
   
   const profileImageStorageKey = `agent-profile-photo:${user.id}`;
   const [profilePhoto, setProfilePhoto] = useState(() => loadSavedImage(profileImageStorageKey));
 
-  const handleLogout = () => { window.location.href = '/login'; };
+  const handleLogout = () => { logout(); };
 
   const handlePhotoChange = async (e) => {
     const file = e.target.files?.[0];
@@ -68,9 +70,10 @@ export default function AgentProfile() {
 
         <div className="space-y-1">
           <h1 className="text-xl font-black text-slate-900 tracking-tight">{user.name}</h1>
-          <div className="flex items-center justify-center gap-2">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mt-2">
              <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100 uppercase tracking-widest">{user.status}</span>
-             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">• ID: {user.id}</span>
+             <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200 uppercase tracking-widest">Code: {user.id}</span>
+             <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-100 uppercase tracking-widest">Rate: {user.commissionRate}</span>
           </div>
         </div>
 
@@ -109,7 +112,7 @@ export default function AgentProfile() {
                  <Mail size={18} />
               </div>
            </div>
-           <div className="space-y-8">
+           <div className="space-y-6">
               <div className="flex flex-col gap-2">
                  <span className="text-[9px] font-black text-slate-300 uppercase tracking-[0.2em] italic">Official Email</span>
                  <p className="text-sm sm:text-base font-black text-slate-800 italic tracking-tight break-all">{user.email}</p>
@@ -117,6 +120,14 @@ export default function AgentProfile() {
               <div className="flex flex-col gap-2">
                  <span className="text-[9px] font-black text-slate-300 uppercase tracking-[0.2em] italic">Business Line</span>
                  <p className="text-sm sm:text-base font-black text-slate-800 italic tracking-tight">{user.phone}</p>
+              </div>
+              <div className="flex flex-col gap-2">
+                 <span className="text-[9px] font-black text-slate-300 uppercase tracking-[0.2em] italic">Agent Code</span>
+                 <p className="text-sm sm:text-base font-black text-slate-800 italic tracking-tight">{user.id}</p>
+              </div>
+              <div className="flex flex-col gap-2">
+                 <span className="text-[9px] font-black text-slate-300 uppercase tracking-[0.2em] italic">Commission Rate</span>
+                 <p className="text-sm sm:text-base font-black text-emerald-600 italic tracking-tight">{user.commissionRate}</p>
               </div>
            </div>
         </div>
