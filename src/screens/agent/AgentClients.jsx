@@ -332,9 +332,20 @@ export default function AgentClients() {
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mt-1 italic">Authorized Agent Client Portfolio</p>
         </div>
         <div className="flex items-center gap-3">
+<<<<<<< HEAD
           <Btn variant="outline" size="sm" onClick={handleExport} className="rounded-xl italic">
             <DownloadIcon size={14} className="mr-2" /> Export
           </Btn>
+=======
+          <Btn variant="outline" size="sm" onClick={generateDummyPaymentsData} className="rounded-xl italic flex items-center gap-2">
+            <Plus size={14} /> Generate Trial Data
+          </Btn>
+          {activeTab !== 'EARNINGS' && (
+            <Btn variant="outline" size="sm" onClick={handleExport} className="rounded-xl italic">
+              <DownloadIcon size={14} className="mr-2" /> Export
+            </Btn>
+          )}
+>>>>>>> e5e1eff6c5ec4d4ac216153fc50d04e3e1f6a1f2
         </div>
       </div>
 
