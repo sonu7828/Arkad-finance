@@ -261,16 +261,16 @@ export default function AdminLoans() {
   ];
 
   const handleOpenManage = (loan) => {
-    const s = getLoanSettings();
     setViewModal(loan);
     setRecordType(null);
+    const isReferred = loan.agent && loan.agent !== 'None' && loan.agent !== '';
     setConfig({
-      interestRate: loan.interestRate || s.interestRate,
-      delinquentRate: s.delinquentInterestRate,
-      agentCommission: loan.agentCommission || s.agentCommission,
-      initiationFee: 3,
-      gracePeriod: s.graceDays,
-      minMonths: 1,
+      interestRate: loan.interestRate !== undefined ? loan.interestRate : 5,
+      delinquentRate: loan.delinquentRate !== undefined ? loan.delinquentRate : 12,
+      agentCommission: isReferred ? 10 : (loan.agentCommission !== undefined ? loan.agentCommission : 0),
+      initiationFee: loan.initiationFee !== undefined ? loan.initiationFee : 3,
+      gracePeriod: loan.gracePeriod !== undefined ? loan.gracePeriod : 0,
+      minMonths: loan.minMonths !== undefined ? loan.minMonths : 6,
       approvedAmount: loan.principalAmount || ''
     });
   };
@@ -286,9 +286,9 @@ export default function AdminLoans() {
     const initiationFeeAmount = (approvedPrincipal * (parseFloat(config.initiationFee) || 0)) / 100;
 
     const approvedFields = {
-      status: 'terms_set', 
-      disbursementDate: null, 
-      dueDate: null,
+      status: 'approved', 
+      disbursementDate: today.toISOString().split('T')[0], 
+      dueDate: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().split('T')[0],
       offerDeadline,
       remainingPrincipal: approvedPrincipal,
       unpaidInterest: 0,
@@ -301,6 +301,9 @@ export default function AdminLoans() {
       agent: viewModal.agent || null,
       minMonths: config.minMonths,
       principalAmount: approvedPrincipal,
+      contractUrl: '#',
+      contractGenerated: true,
+      notificationSent: true,
       ...config
     };
 
@@ -424,47 +427,93 @@ export default function AdminLoans() {
           </div>
         </div>
  
-        <ProTable headers={[
-          { label: 'Borrower Identity' },
-          { label: 'Capital Amount' },
-          { label: 'Disbursement Date', className: 'hidden md:table-cell' },
-          { label: 'Duration', className: 'hidden sm:table-cell' },
-          { label: 'Protocol Status' },
-          { label: 'Action', className: 'text-right' }
-        ]}>
-           {filteredLoans.map((loan) => (
-             <tr key={loan.id} className="group hover:bg-slate-50/50 transition-colors">
-                <td className="px-6 py-5">
-                   <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 text-xs font-bold border border-slate-50">
-                         {loan.user.name[0]}
-                      </div>
-                      <div className="max-w-[120px] sm:max-w-none">
-                        <p className="text-[13px] font-bold text-slate-800 transition-colors group-hover:text-primary truncate">{loan.user.name}</p>
-                        <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest mt-0.5 truncate">#{loan.id}</p>
-                      </div>
-                   </div>
-                </td>
-                <td className="px-6 py-5">
-                   <p className="text-[13px] font-bold text-slate-900">{formatMoney(loan.principalAmount)}</p>
-                </td>
-                <td className="px-6 py-5 hidden md:table-cell">
-                   <p className="text-[11px] font-bold text-slate-500">{formatDate(loan.disbursementDate)}</p>
-                </td>
-                <td className="px-6 py-5 hidden sm:table-cell">
-                   <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{loan.duration} Months</p>
-                </td>
-                <td className="px-6 py-5">
-                   <StatusBadge status={calculateLoanStatus(loan)} />
-                </td>
-                <td className="px-6 py-5 text-right">
-                   <Btn size="sm" variant={loan.status === 'pending' ? 'primary' : 'outline'} onClick={() => handleOpenManage(loan)}>
-                      {loan.status === 'pending' ? 'Make Offer' : 'Details'}
-                   </Btn>
-                </td>
-             </tr>
-           ))}
-        </ProTable>
+        {statusFilter === 'PENDING' ? (
+          <ProTable headers={[
+            { label: 'Applicant' },
+            { label: 'Requested' },
+            { label: 'Term' },
+            { label: 'Applied' },
+            { label: 'Agent' },
+            { label: 'Action', className: 'text-right' }
+          ]}>
+             {filteredLoans.map((loan) => (
+               <tr key={loan.id} className="group hover:bg-slate-50/50 transition-colors">
+                  <td className="px-6 py-5">
+                     <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 text-xs font-bold border border-slate-50">
+                           {loan.user.name[0]}
+                        </div>
+                        <div className="max-w-[120px] sm:max-w-none">
+                          <p className="text-[13px] font-bold text-slate-800 transition-colors group-hover:text-primary truncate">{loan.user.name}</p>
+                          <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest mt-0.5 truncate">#{loan.id}</p>
+                        </div>
+                     </div>
+                  </td>
+                  <td className="px-6 py-5">
+                     <p className="text-[13px] font-bold text-slate-900">{formatMoney(loan.principalAmount)}</p>
+                  </td>
+                  <td className="px-6 py-5">
+                     <p className="text-[11px] font-bold text-slate-500">{loan.duration} mo</p>
+                  </td>
+                  <td className="px-6 py-5">
+                     <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{loan.appliedTime || 'Just now'}</p>
+                  </td>
+                  <td className="px-6 py-5">
+                     <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg text-[10px] font-bold uppercase tracking-wider">
+                        {loan.agent || 'None'}
+                     </span>
+                  </td>
+                  <td className="px-6 py-5 text-right">
+                     <Btn size="sm" variant="primary" onClick={() => handleOpenManage(loan)}>
+                        Review
+                     </Btn>
+                  </td>
+               </tr>
+             ))}
+          </ProTable>
+        ) : (
+          <ProTable headers={[
+            { label: 'Borrower Identity' },
+            { label: 'Capital Amount' },
+            { label: 'Disbursement Date', className: 'hidden md:table-cell' },
+            { label: 'Duration', className: 'hidden sm:table-cell' },
+            { label: 'Protocol Status' },
+            { label: 'Action', className: 'text-right' }
+          ]}>
+             {filteredLoans.map((loan) => (
+               <tr key={loan.id} className="group hover:bg-slate-50/50 transition-colors">
+                  <td className="px-6 py-5">
+                     <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 text-xs font-bold border border-slate-50">
+                           {loan.user.name[0]}
+                        </div>
+                        <div className="max-w-[120px] sm:max-w-none">
+                          <p className="text-[13px] font-bold text-slate-800 transition-colors group-hover:text-primary truncate">{loan.user.name}</p>
+                          <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest mt-0.5 truncate">#{loan.id}</p>
+                        </div>
+                     </div>
+                  </td>
+                  <td className="px-6 py-5">
+                     <p className="text-[13px] font-bold text-slate-900">{formatMoney(loan.principalAmount)}</p>
+                  </td>
+                  <td className="px-6 py-5 hidden md:table-cell">
+                     <p className="text-[11px] font-bold text-slate-500">{formatDate(loan.disbursementDate)}</p>
+                  </td>
+                  <td className="px-6 py-5 hidden sm:table-cell">
+                     <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{loan.duration} Months</p>
+                  </td>
+                  <td className="px-6 py-5">
+                     <StatusBadge status={calculateLoanStatus(loan)} />
+                  </td>
+                  <td className="px-6 py-5 text-right">
+                     <Btn size="sm" variant={loan.status === 'pending' ? 'primary' : 'outline'} onClick={() => handleOpenManage(loan)}>
+                        {loan.status === 'pending' ? 'Make Offer' : 'Details'}
+                     </Btn>
+                  </td>
+               </tr>
+             ))}
+          </ProTable>
+        )}
       </div>
 
       <Modal isOpen={!!viewModal} onClose={() => setViewModal(null)} title="Loan Configuration">
@@ -475,15 +524,14 @@ export default function AdminLoans() {
                   {viewModal.user.name[0]}
                </div>
                <h4 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">{viewModal.user.name}</h4>
-               <p className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-1">Requested: {formatMoney(viewModal.principalAmount)}</p>
+               
+               <div className="mt-2 text-xs font-semibold text-slate-500 space-y-1">
+                 <p>Email: {viewModal.user.email || 'jose.garcia@example.com'}</p>
+                 <p>WhatsApp: {viewModal.user.whatsapp || '+52 1 55 1234 5678'}</p>
+               </div>
                
                {/* KYC Documents Display */}
-               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 text-left">
-                  <div className="p-3 bg-white border border-slate-100 rounded-xl flex flex-col items-center justify-center text-center cursor-pointer hover:border-primary transition-colors">
-                    <FileText size={20} className="text-primary mb-2" />
-                    <span className="text-[9px] font-bold uppercase text-slate-500">Selfie</span>
-                    <span className="text-[10px] font-bold text-primary mt-1">View Doc</span>
-                  </div>
+               <div className="grid grid-cols-3 gap-4 mt-6 text-left">
                   <div className="p-3 bg-white border border-slate-100 rounded-xl flex flex-col items-center justify-center text-center cursor-pointer hover:border-primary transition-colors">
                     <FileText size={20} className="text-primary mb-2" />
                     <span className="text-[9px] font-bold uppercase text-slate-500">ID Front</span>
@@ -496,101 +544,93 @@ export default function AdminLoans() {
                   </div>
                   <div className="p-3 bg-white border border-slate-100 rounded-xl flex flex-col items-center justify-center text-center cursor-pointer hover:border-primary transition-colors">
                     <FileText size={20} className="text-primary mb-2" />
-                    <span className="text-[9px] font-bold uppercase text-slate-500">Address</span>
+                    <span className="text-[9px] font-bold uppercase text-slate-500">Address Proof</span>
                     <span className="text-[10px] font-bold text-primary mt-1">View Doc</span>
                   </div>
                </div>
             </div>
 
             {viewModal.status === 'pending' ? (
-              <div className="space-y-6">
-                <div className="px-1">
-                   <h5 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                     <Percent size={14} className="text-primary" /> Calibrate Contract Terms
-                   </h5>
-                </div>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <FormField label="Approved Amount (MXN)">
-                    <Input type="number" value={config.approvedAmount} onChange={e => setConfig({...config, approvedAmount: e.target.value})} suffix="MXN" />
-                  </FormField>
-                  <FormField label="Interest Rate (%)">
-                    <Input type="number" value={config.interestRate} onChange={e => setConfig({...config, interestRate: e.target.value})} suffix="%" />
-                  </FormField>
-                  <FormField label="Initiation Fee (%)">
-                    <Input type="number" value={config.initiationFee} onChange={e => setConfig({...config, initiationFee: e.target.value})} suffix="%" />
-                  </FormField>
-                  <FormField label="Grace Days">
-                    <Input type="number" value={config.gracePeriod} onChange={e => setConfig({...config, gracePeriod: e.target.value})} placeholder="e.g. 3" />
-                  </FormField>
-                  <FormField label="Delinquent Penalty (%)">
-                    <Input type="number" value={config.delinquentRate} onChange={e => setConfig({...config, delinquentRate: e.target.value})} suffix="%" />
-                  </FormField>
-                  <FormField label="Min Months">
-                    <Input type="number" value={config.minMonths} onChange={e => setConfig({...config, minMonths: e.target.value})} placeholder="e.g. 1" />
-                  </FormField>
-                  <FormField label="Agent Commission (%)">
-                     <select
-                       value={config.agentCommission}
-                       onChange={e => setConfig({...config, agentCommission: e.target.value})}
-                       className="premium-input h-12 appearance-none text-[11px] font-bold uppercase tracking-widest w-full"
-                     >
-                        <option value="3">3% Basic</option>
-                        <option value="5">5% Standard</option>
-                        <option value="8">8% Premium</option>
-                        <option value="10">10% Expert</option>
-                     </select>
-                  </FormField>
-                </div>
-
-                <div className="bg-primary/5 p-4 sm:p-6 rounded-2xl border border-primary/10">
-                  <div className="flex flex-col sm:flex-row items-start gap-4">
-                     <div className="w-8 h-8 rounded-lg bg-primary text-white flex items-center justify-center shrink-0">
-                        <Zap size={16} />
-                     </div>
-                     <div className="flex-1 w-full">
-                        <p className="text-xs font-bold text-slate-900 leading-none mb-4 sm:mb-0">Smart Calculation Registry</p>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 mt-4">
-                          {(() => {
-                            const details = calculateLoanDetails({
-                              principal: viewModal.principalAmount,
-                              duration: config.duration || viewModal.duration,
-                              interestRate: config.interestRate,
-                              hasAgent: !!config.agentId,
-                              agentCommissionRate: config.agentCommission,
-                              initiationFee: config.initiationFee
-                            });
-                            return (
-                               <>
-                                 <div className="space-y-1">
-                                    <p className="text-[9px] font-bold text-slate-400 uppercase">Monthly Pay</p>
-                                    <p className="text-xs font-bold text-slate-900">{formatMoney(details.monthlyInstallment)}</p>
-                                 </div>
-                                 <div className="space-y-1">
-                                    <p className="text-[9px] font-bold text-slate-400 uppercase">Disbursement</p>
-                                    <p className="text-xs font-bold text-emerald-500 italic">{formatMoney(details.disbursementAmount)}</p>
-                                 </div>
-                                 <div className="space-y-1">
-                                    <p className="text-[9px] font-bold text-slate-400 uppercase">Total Owed</p>
-                                    <p className="text-xs font-bold text-primary">{formatMoney(details.totalPayable)}</p>
-                                 </div>
-                                 <div className="space-y-1">
-                                    <p className="text-[9px] font-bold text-slate-400 uppercase">Commission</p>
-                                    <p className="text-xs font-bold text-emerald-500">{config.agentId ? formatMoney(details.agentCommission) : 'N/A'}</p>
-                                 </div>
-                               </>
-                            );
-                          })()}
-                       </div>
-                    </div>
+               <div className="space-y-6">
+                 <div className="px-1">
+                    <h5 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                      <Percent size={14} className="text-primary" /> Calibrate Contract Terms
+                    </h5>
                  </div>
-              </div>
+                 
+                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                   <FormField label="Approved Amount">
+                     <Input type="number" value={config.approvedAmount} onChange={e => setConfig({...config, approvedAmount: e.target.value})} suffix="MXN" />
+                   </FormField>
+                   <FormField label="Monthly Interest Rate (%)">
+                     <Input type="number" value={config.interestRate} onChange={e => setConfig({...config, interestRate: e.target.value})} suffix="%" />
+                   </FormField>
+                   <FormField label="Initiation Fee (%)">
+                     <Input type="number" value={config.initiationFee} onChange={e => setConfig({...config, initiationFee: e.target.value})} suffix="%" />
+                   </FormField>
+                   <FormField label="Grace Period (days)">
+                     <Input type="number" value={config.gracePeriod} onChange={e => setConfig({...config, gracePeriod: e.target.value})} placeholder="e.g. 0" />
+                   </FormField>
+                   <FormField label="Delinquent Interest Rate (%)">
+                     <Input type="number" value={config.delinquentRate} onChange={e => setConfig({...config, delinquentRate: e.target.value})} suffix="%" />
+                   </FormField>
+                   <FormField label="Min Interest-Only Months">
+                     <Input type="number" value={config.minMonths} onChange={e => setConfig({...config, minMonths: e.target.value})} placeholder="e.g. 6" />
+                   </FormField>
+                   <FormField label="Agent Commission (%)">
+                     <Input type="number" value={config.agentCommission} onChange={e => setConfig({...config, agentCommission: e.target.value})} suffix="%" />
+                   </FormField>
+                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-4 pt-4 border-t border-slate-50">
-                   <Btn variant="outline" className="flex-1 h-14" onClick={() => setViewModal(null)}>Dismiss</Btn>
-                   <Btn variant="danger" className="flex-1 h-14" onClick={handleDeny}>Deny Application</Btn>
-                   <Btn className="flex-[2] h-14 shadow-xl" onClick={handleApprove}>Authorize Disburse</Btn>
-                </div>
+                 <div className="bg-primary/5 p-4 sm:p-6 rounded-2xl border border-primary/10">
+                   <div className="flex flex-col sm:flex-row items-start gap-4">
+                      <div className="w-8 h-8 rounded-lg bg-primary text-white flex items-center justify-center shrink-0">
+                         <Zap size={16} />
+                      </div>
+                      <div className="flex-1 w-full">
+                         <p className="text-xs font-bold text-slate-900 leading-none mb-4 sm:mb-0">Smart Calculation Registry</p>
+                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 mt-4">
+                           {(() => {
+                             const approvedPrincipal = parseFloat(config.approvedAmount) || viewModal.principalAmount;
+                             const details = calculateLoanDetails({
+                               principal: viewModal.principalAmount,
+                               duration: config.duration || viewModal.duration,
+                               interestRate: config.interestRate,
+                               hasAgent: !!config.agentId,
+                               agentCommissionRate: config.agentCommission,
+                               initiationFee: config.initiationFee
+                             });
+                             return (
+                                <>
+                                  <div className="space-y-1">
+                                     <p className="text-[9px] font-bold text-slate-400 uppercase">Monthly Pay</p>
+                                     <p className="text-xs font-bold text-slate-900">{formatMoney(details.monthlyInstallment)}</p>
+                                  </div>
+                                  <div className="space-y-1">
+                                     <p className="text-[9px] font-bold text-slate-400 uppercase">Disbursement</p>
+                                     <p className="text-xs font-bold text-emerald-500 italic">{formatMoney(details.disbursementAmount)}</p>
+                                  </div>
+                                  <div className="space-y-1">
+                                     <p className="text-[9px] font-bold text-slate-400 uppercase">Total Owed</p>
+                                     <p className="text-xs font-bold text-primary">{formatMoney(details.totalPayable)}</p>
+                                  </div>
+                                  <div className="space-y-1">
+                                     <p className="text-[9px] font-bold text-slate-400 uppercase">Commission</p>
+                                     <p className="text-xs font-bold text-emerald-500">{config.agentCommission > 0 ? formatMoney((approvedPrincipal * config.agentCommission) / 100) : 'N/A'}</p>
+                                  </div>
+                                </>
+                             );
+                           })()}
+                        </div>
+                     </div>
+                  </div>
+               </div>
+
+                 <div className="flex flex-col sm:flex-row gap-4 pt-4 border-t border-slate-50">
+                    <Btn variant="outline" className="flex-1 h-14" onClick={() => setViewModal(null)}>Dismiss</Btn>
+                    <Btn variant="danger" className="flex-1 h-14" onClick={handleDeny}>Reject Application</Btn>
+                    <Btn className="flex-[2] h-14 shadow-xl" onClick={handleApprove}>Approve Loan</Btn>
+                 </div>
               </div>
             ) : viewModal.status === 'terms_set' ? (
                <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-700">
@@ -992,16 +1032,24 @@ export default function AdminLoans() {
         </div>
       </Modal>
 
-      <Modal isOpen={showApproveSuccess} onClose={() => setShowApproveSuccess(false)} title="Offer Sent">
+      <Modal isOpen={showApproveSuccess} onClose={() => setShowApproveSuccess(false)} title="Application Approved">
         <div className="p-4 sm:p-6 text-center space-y-6 animate-in zoom-in-95 duration-300">
            <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center mx-auto shadow-inner">
              <CheckCircle2 size={32} />
            </div>
            <div>
-             <h3 className="text-xl font-black text-slate-900 tracking-tight mb-2">Offer Sent Successfully</h3>
-             <p className="text-sm font-medium text-slate-500 leading-relaxed max-w-sm mx-auto">
-               The offer has been successfully calibrated and sent to the borrower for signature.
-             </p>
+             <h3 className="text-xl font-black text-slate-900 tracking-tight mb-2">Loan Approved Successfully</h3>
+             <div className="text-sm font-medium text-slate-500 leading-relaxed max-w-sm mx-auto space-y-3">
+               <p className="bg-emerald-50 text-emerald-800 p-3 rounded-xl border border-emerald-100 text-xs font-bold flex items-center justify-center gap-2">
+                 <span>📄 Contract PDF auto-generated & saved</span>
+               </p>
+               <p className="bg-blue-50 text-blue-800 p-3 rounded-xl border border-blue-100 text-xs font-bold flex items-center justify-center gap-2">
+                 <span>✉️ Approval SMS & Email notifications dispatched</span>
+               </p>
+               <p className="text-xs text-slate-400">
+                 Loan status updated to "approved". Repayment schedule has been generated.
+               </p>
+             </div>
            </div>
            <div className="pt-4 border-t border-slate-100">
              <Btn className="w-full h-12 shadow-lg shadow-emerald-500/20" onClick={() => setShowApproveSuccess(false)}>Done</Btn>

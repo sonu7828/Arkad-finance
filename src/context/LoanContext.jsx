@@ -14,6 +14,78 @@ const DEMO_LOANS = [
   { id: 'LN-8802', user: { name: 'Sarah Williams' }, principalAmount: 8500, remainingPrincipal: 8500, duration: 6, status: 'Pending', createdAt: '2024-10-13', interestRate: 10, method: 'BANK_TRANSFER', disbursementDate: null, payments: [] },
   { id: 'LN-8803', user: { name: 'David Brown' }, principalAmount: 3200, remainingPrincipal: 3200, duration: 9, status: 'Active', createdAt: '2024-10-12', interestRate: 12, method: 'CASH', disbursementDate: '2024-10-12', dueDate: getOffsetDateString(0), payments: [] },
   { id: 'LN-8804', user: { name: 'Emma Thompson' }, principalAmount: 12000, remainingPrincipal: 12000, duration: 18, status: 'Active', createdAt: '2024-10-10', interestRate: 10, method: 'BANK_TRANSFER', disbursementDate: '2024-10-10', dueDate: getOffsetDateString(-3), payments: [] },
+  { 
+    id: 'LN-8805', 
+    user: { 
+      name: 'José Garcia', 
+      email: 'jose.garcia@example.com', 
+      whatsapp: '+52 1 55 1234 5678' 
+    }, 
+    principalAmount: 1000, 
+    remainingPrincipal: 1000, 
+    duration: 12, 
+    status: 'Pending', 
+    createdAt: new Date(Date.now() - 2 * 3600000).toISOString(), 
+    appliedTime: '2 hrs ago',
+    interestRate: 5, 
+    initiationFee: 3,
+    gracePeriod: 0,
+    delinquentRate: 12,
+    minMonths: 6,
+    agent: 'None', 
+    agentCommission: 0,
+    disbursementDate: null, 
+    payments: [], 
+    fees: [] 
+  },
+  { 
+    id: 'LN-8806', 
+    user: { 
+      name: 'María López', 
+      email: 'maria.lopez@example.com', 
+      whatsapp: '+52 1 55 8765 4321' 
+    }, 
+    principalAmount: 2500, 
+    remainingPrincipal: 2500, 
+    duration: 24, 
+    status: 'Pending', 
+    createdAt: new Date(Date.now() - 5 * 3600000).toISOString(), 
+    appliedTime: '5 hrs ago',
+    interestRate: 5, 
+    initiationFee: 3,
+    gracePeriod: 0,
+    delinquentRate: 12,
+    minMonths: 6,
+    agent: 'AG-001', 
+    agentCommission: 10, 
+    disbursementDate: null, 
+    payments: [], 
+    fees: [] 
+  },
+  { 
+    id: 'LN-8807', 
+    user: { 
+      name: 'Miguel Santos', 
+      email: 'miguel.santos@example.com', 
+      whatsapp: '+52 1 55 4321 8765' 
+    }, 
+    principalAmount: 500, 
+    remainingPrincipal: 500, 
+    duration: 6, 
+    status: 'Pending', 
+    createdAt: new Date(Date.now() - 24 * 3600000).toISOString(), 
+    appliedTime: '1 day ago',
+    interestRate: 5, 
+    initiationFee: 3,
+    gracePeriod: 0,
+    delinquentRate: 12,
+    minMonths: 6,
+    agent: 'AG-002', 
+    agentCommission: 10, 
+    disbursementDate: null, 
+    payments: [], 
+    fees: [] 
+  },
 ];
 
 const LoanContext = createContext(null);
@@ -25,6 +97,12 @@ export function LoanProvider({ children }) {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
+          const hasJose = parsed.some(l => l.user?.name === 'José Garcia');
+          if (!hasJose) {
+            const updated = [...parsed, ...DEMO_LOANS.filter(dl => dl.user.name === 'José Garcia' || dl.user.name === 'María López' || dl.user.name === 'Miguel Santos')];
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+            return updated;
+          }
           return parsed;
         }
       }
@@ -126,7 +204,10 @@ export function LoanProvider({ children }) {
     }));
   };
 
-  const generateDummyPaymentsData = () => {
+  const generateDummyPaymentsData = (userEmail, userName) => {
+    const finalEmail = typeof userEmail === 'string' ? userEmail : 'borrower@arkad.com';
+    const finalName = typeof userName === 'string' ? userName : 'Verified Capital User';
+
     const todayStr = new Date().toISOString().split('T')[0];
     const overdueStr = new Date(Date.now() - 86400000 * 3).toISOString().split('T')[0]; // 3 days overdue
     const upcomingStr = new Date(Date.now() + 86400000 * 5).toISOString().split('T')[0]; // due in 5 days
@@ -183,7 +264,10 @@ export function LoanProvider({ children }) {
       },
       {
         id: `LN-DUMMY-04`,
-        user: { name: 'Verified Capital User', email: 'borrower@arkad.com' },
+        user: { 
+          name: finalName, 
+          email: finalEmail 
+        },
         principalAmount: 7500,
         remainingPrincipal: 6000,
         duration: 12,
@@ -195,7 +279,42 @@ export function LoanProvider({ children }) {
         dueDate: todayStr,
         unpaidInterest: 750,
         payments: [
-          { id: 'PAY-D-04', date: '2026-05-10', amount: 750, type: 'interest', totalCollected: 750, baseAmount: 750 }
+          { id: 'PAY-H-01', dueDate: '2026-04-15', date: '2026-04-15', amount: 150, status: 'PAID', type: 'interest' },
+          { id: 'PAY-H-02', dueDate: '2026-05-15', date: '2026-05-16', amount: 150, status: 'PAID', type: 'interest' },
+          { id: 'PAY-H-03', dueDate: '2026-06-15', date: null, amount: 150, status: 'PENDING', type: 'interest' },
+          { id: 'PAY-H-04', dueDate: '2026-07-15', date: null, amount: 150, status: 'DUE SOON', type: 'interest' }
+        ]
+      },
+      {
+        id: `LN-DUMMY-05`,
+        user: { 
+          name: finalName, 
+          email: finalEmail 
+        },
+        principalAmount: 1800,
+        remainingPrincipal: 0,
+        principalPaid: 1800,
+        duration: 12,
+        status: 'Completed',
+        createdAt: '2025-04-15',
+        interestRate: 0,
+        method: 'BANK_TRANSFER',
+        disbursementDate: '2025-04-15',
+        dueDate: '2026-04-15',
+        unpaidInterest: 0,
+        payments: [
+          { id: 'PAY-C-01', dueDate: '2025-05-15', date: '2025-05-15', amount: 150, status: 'PAID', type: 'interest' },
+          { id: 'PAY-C-02', dueDate: '2025-06-15', date: '2025-06-15', amount: 150, status: 'PAID', type: 'interest' },
+          { id: 'PAY-C-03', dueDate: '2025-07-15', date: '2025-07-15', amount: 150, status: 'PAID', type: 'interest' },
+          { id: 'PAY-C-04', dueDate: '2025-08-15', date: '2025-08-15', amount: 150, status: 'PAID', type: 'interest' },
+          { id: 'PAY-C-05', dueDate: '2025-09-15', date: '2025-09-15', amount: 150, status: 'PAID', type: 'interest' },
+          { id: 'PAY-C-06', dueDate: '2025-10-15', date: '2025-10-15', amount: 150, status: 'PAID', type: 'interest' },
+          { id: 'PAY-C-07', dueDate: '2025-11-15', date: '2025-11-15', amount: 150, status: 'PAID', type: 'interest' },
+          { id: 'PAY-C-08', dueDate: '2025-12-15', date: '2025-12-15', amount: 150, status: 'PAID', type: 'interest' },
+          { id: 'PAY-C-09', dueDate: '2026-01-15', date: '2026-01-15', amount: 150, status: 'PAID', type: 'interest' },
+          { id: 'PAY-C-10', dueDate: '2026-02-15', date: '2026-02-15', amount: 150, status: 'PAID', type: 'interest' },
+          { id: 'PAY-C-11', dueDate: '2026-03-15', date: '2026-03-15', amount: 150, status: 'PAID', type: 'interest' },
+          { id: 'PAY-C-12', dueDate: '2026-04-15', date: '2026-04-15', amount: 150, status: 'PAID', type: 'interest' }
         ]
       }
     ];

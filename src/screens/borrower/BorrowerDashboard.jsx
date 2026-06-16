@@ -41,6 +41,7 @@ export default function BorrowerDashboard() {
 
   const activeLoans = allLoans.filter(l => l.status === 'active');
   const pendingApps = allLoans.filter(l => l.status === 'pending');
+  const completedLoans = allLoans.filter(l => l.status === 'completed');
 
   const totalOutstanding = activeLoans.reduce((sum, l) => {
     const details = calculateLoanDetails({
@@ -85,6 +86,28 @@ export default function BorrowerDashboard() {
       animate={{ opacity: 1, y: 0 }}
       className="space-y-8 max-w-[1200px] mx-auto pb-10"
     >
+      {/* SUCCESS ALERTS FOR COMPLETED LOANS */}
+      {completedLoans.map(loan => (
+        <div key={loan.id} className="p-6 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200/50 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center shadow-md shadow-emerald-500/20 shrink-0">
+              <Award size={20} />
+            </div>
+            <div>
+              <h4 className="text-sm font-black text-emerald-800 uppercase tracking-wide">Congratulations! Loan fully repaid</h4>
+              <p className="text-xs font-medium text-emerald-600 mt-1">Contract #{loan.id} has been fully settled. Total paid: $1,800. Thank you for your trusted business.</p>
+            </div>
+          </div>
+          <Btn 
+            size="sm" 
+            className="!bg-emerald-600 hover:!bg-emerald-700 !rounded-xl !h-10 px-4 italic font-black uppercase tracking-widest text-[9px] text-white shadow-sm shrink-0" 
+            onClick={() => navigate('/borrower/apply')}
+          >
+            Apply for new loan <ArrowRight size={12} className="ml-2 inline" />
+          </Btn>
+        </div>
+      ))}
+
       {/* PROFESSIONAL WELCOME */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
@@ -189,6 +212,29 @@ export default function BorrowerDashboard() {
               ))}
             </ProTable>
           </div>
+
+          {/* COMPLETED SECTION */}
+          {completedLoans.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest flex items-center gap-2 px-1">
+                <Award size={16} className="text-emerald-500" /> Completed Loans History
+              </h3>
+              <ProTable headers={['Contract ID', 'Principal Amount', 'Total Repaid', 'Status']}>
+                {completedLoans.map((loan) => (
+                  <tr key={loan.id}>
+                    <td><span className="text-[10px] font-bold text-slate-400 uppercase">#{loan.id}</span></td>
+                    <td><span className="text-sm font-bold text-slate-900">{formatMoney(loan.principalAmount)}</span></td>
+                    <td><span className="text-sm font-bold text-emerald-600">{formatMoney(1800)}</span></td>
+                    <td>
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-600 border border-emerald-100">
+                        COMPLETED ✓
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </ProTable>
+            </div>
+          )}
         </div>
 
         {/* SIDEBAR WIDGETS */}
