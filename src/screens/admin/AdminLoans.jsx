@@ -112,12 +112,12 @@ export default function AdminLoans() {
   }, [searchParams]);
 
   const [config, setConfig] = useState({
-    interestRate: 12,
-    delinquentRate: 15,
-    agentCommission: 5,
+    interestRate: 5.0,
+    delinquentRate: 12,
+    agentCommission: 10,
     initiationFee: 3,
-    gracePeriod: 3,
-    minMonths: 1,
+    gracePeriod: 0,
+    minMonths: 6,
     approvedAmount: ''
   });
 
@@ -133,12 +133,12 @@ export default function AdminLoans() {
   useEffect(() => {
     const s = getLoanSettings();
     setConfig({
-      interestRate: s.interestRate,
-      delinquentRate: s.delinquentInterestRate,
-      agentCommission: s.agentCommission,
+      interestRate: s.interestRate || 5.0,
+      delinquentRate: s.delinquentInterestRate || 12,
+      agentCommission: s.agentCommission || 10,
       initiationFee: 3,
-      gracePeriod: s.graceDays,
-      minMonths: 1,
+      gracePeriod: s.graceDays || 0,
+      minMonths: 6,
       approvedAmount: ''
     });
   }, []);
@@ -265,12 +265,12 @@ export default function AdminLoans() {
     setViewModal(loan);
     setRecordType(null);
     setConfig({
-      interestRate: loan.interestRate || s.interestRate,
-      delinquentRate: s.delinquentInterestRate,
-      agentCommission: loan.agentCommission || s.agentCommission,
-      initiationFee: 3,
-      gracePeriod: s.graceDays,
-      minMonths: 1,
+      interestRate: loan.interestRate || 5.0,
+      delinquentRate: loan.delinquentRate || 12,
+      agentCommission: loan.agentCommission || 10,
+      initiationFee: loan.initiationFee || 3,
+      gracePeriod: loan.gracePeriod || 0,
+      minMonths: loan.minMonths || 6,
       approvedAmount: loan.principalAmount || ''
     });
   };
@@ -459,7 +459,7 @@ export default function AdminLoans() {
                 </td>
                 <td className="px-6 py-5 text-right">
                    <Btn size="sm" variant={loan.status === 'pending' ? 'primary' : 'outline'} onClick={() => handleOpenManage(loan)}>
-                      {loan.status === 'pending' ? 'Make Offer' : 'Details'}
+                      {loan.status === 'pending' ? 'Review' : 'Details'}
                    </Btn>
                 </td>
              </tr>
@@ -511,23 +511,23 @@ export default function AdminLoans() {
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <FormField label="Approved Amount (MXN)">
+                  <FormField label="Approved Amount">
                     <Input type="number" value={config.approvedAmount} onChange={e => setConfig({...config, approvedAmount: e.target.value})} suffix="MXN" />
                   </FormField>
-                  <FormField label="Interest Rate (%)">
+                  <FormField label="Monthly Interest Rate (%)">
                     <Input type="number" value={config.interestRate} onChange={e => setConfig({...config, interestRate: e.target.value})} suffix="%" />
                   </FormField>
                   <FormField label="Initiation Fee (%)">
                     <Input type="number" value={config.initiationFee} onChange={e => setConfig({...config, initiationFee: e.target.value})} suffix="%" />
                   </FormField>
-                  <FormField label="Grace Days">
-                    <Input type="number" value={config.gracePeriod} onChange={e => setConfig({...config, gracePeriod: e.target.value})} placeholder="e.g. 3" />
+                  <FormField label="Grace Period (days)">
+                    <Input type="number" value={config.gracePeriod} onChange={e => setConfig({...config, gracePeriod: e.target.value})} placeholder="e.g. 0" />
                   </FormField>
-                  <FormField label="Delinquent Penalty (%)">
+                  <FormField label="Delinquent Interest (%)">
                     <Input type="number" value={config.delinquentRate} onChange={e => setConfig({...config, delinquentRate: e.target.value})} suffix="%" />
                   </FormField>
-                  <FormField label="Min Months">
-                    <Input type="number" value={config.minMonths} onChange={e => setConfig({...config, minMonths: e.target.value})} placeholder="e.g. 1" />
+                  <FormField label="Minimum Interest-Only Months">
+                    <Input type="number" value={config.minMonths} onChange={e => setConfig({...config, minMonths: e.target.value})} placeholder="e.g. 6" />
                   </FormField>
                   <FormField label="Agent Commission (%)">
                      <select
@@ -589,7 +589,7 @@ export default function AdminLoans() {
                 <div className="flex flex-col sm:flex-row gap-4 pt-4 border-t border-slate-50">
                    <Btn variant="outline" className="flex-1 h-14" onClick={() => setViewModal(null)}>Dismiss</Btn>
                    <Btn variant="danger" className="flex-1 h-14" onClick={handleDeny}>Deny Application</Btn>
-                   <Btn className="flex-[2] h-14 shadow-xl" onClick={handleApprove}>Authorize Disburse</Btn>
+                   <Btn className="flex-[2] h-14 shadow-xl" onClick={handleApprove}>Approve Loan</Btn>
                 </div>
               </div>
             ) : viewModal.status === 'terms_set' ? (

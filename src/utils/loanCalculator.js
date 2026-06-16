@@ -17,7 +17,8 @@ export const calculateLoanDetails = ({
   isPaid = false,
   agentCommissionRate, // Optional override
   hasAgent = false, // Should be true if an agent is assigned
-  initiationFee // Optional: override global
+  initiationFee, // Optional: override global
+  carriedForwardDue = 0 // Carry forward unpaid amounts from previous periods
 }) => {
   const settings = getLoanSettings();
   
@@ -26,12 +27,13 @@ export const calculateLoanDetails = ({
   const currP = remainingPrincipal !== undefined ? parseFloat(remainingPrincipal) : p;
   const d = parseInt(duration) || 1;
   const iRate = interestRate !== undefined ? parseFloat(interestRate) : settings.interestRate;
+  const carriedDue = parseFloat(carriedForwardDue) || 0;
   
   // 2. Base Interest (Monthly Simple Interest)
   const monthlyInterest = round(p * (iRate / 100));
   const totalInterest = round(monthlyInterest * d);
-  // 3. Interest-Only Rule: Monthly Payment = (Principal × Monthly Interest Rate)
-  const monthlyPaymentCurrent = monthlyInterest;
+  // 3. Interest-Only Rule: Monthly Payment = (Principal × Monthly Interest Rate) + Any Previous Shortfalls
+  const monthlyPaymentCurrent = round(monthlyInterest + carriedDue);
 
   // 4. Initiation Fee (Deducted from disbursement) - Now a % of Principal
   const initiationFeeParam = initiationFee !== undefined ? parseFloat(initiationFee) : parseFloat(settings.initiationFee || 3);

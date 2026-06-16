@@ -80,12 +80,15 @@ export function LoanProvider({ children }) {
       const pCollected = parseFloat(amountCollected) || 0;
       const pDue = parseFloat(amountDue) || 0;
       const pInterest = parseFloat(interestDue) || pDue; // Assume all is interest if not specified
+      
+      const commissionUnlocked = pCollected * ((loan.agentCommission || 10) / 100);
 
       const newPayment = {
         id: `PAY-${Date.now()}`,
         date: new Date().toISOString().split('T')[0],
         amount: pCollected,
-        type: pCollected === pDue ? 'EXACT' : (pCollected < pDue ? 'PARTIAL' : 'OVERPAYMENT')
+        type: pCollected === pDue ? 'EXACT' : (pCollected < pDue ? 'PARTIAL' : 'OVERPAYMENT'),
+        commissionUnlocked: commissionUnlocked
       };
 
       let newRemainingPrincipal = loan.remainingPrincipal !== undefined ? loan.remainingPrincipal : loan.principalAmount;
@@ -110,6 +113,7 @@ export function LoanProvider({ children }) {
         ...loan,
         remainingPrincipal: newRemainingPrincipal,
         carriedForwardDue: newCarriedForward,
+        agentCommissionUnlocked: (loan.agentCommissionUnlocked || 0) + commissionUnlocked,
         payments: [...(loan.payments || []), newPayment],
         status: newRemainingPrincipal <= 0 ? 'COMPLETED' : loan.status
       };

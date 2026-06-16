@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   CreditCard, Wallet, ShieldCheck, Clock,
   FileText, ChevronRight, Activity, Award,
-  Calendar, DollarSign, Plus, ArrowRight, History as HistoryIcon, TrendingUp
+  Calendar, DollarSign, Plus, ArrowRight, History as HistoryIcon, TrendingUp, MessageCircle, Building
 } from 'lucide-react';
 import { StatusBadge, PageTitle, Btn, ProTable, Modal, StatCard } from '../../components/UI';
 import { getDueDateCounter, formatDateDDMMYYYY } from '../../utils/dateUtils';
@@ -38,6 +38,7 @@ export default function BorrowerDashboard() {
   }, [globalLoans, user]);
 
   const [breakdownModal, setBreakdownModal] = useState(null);
+  const [paymentActionModal, setPaymentActionModal] = useState(null);
 
   const activeLoans = allLoans.filter(l => l.status === 'active');
   const pendingApps = allLoans.filter(l => l.status === 'pending');
@@ -121,51 +122,81 @@ export default function BorrowerDashboard() {
             <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest flex items-center gap-2 px-1">
               <ShieldCheck size={16} className="text-emerald-500" /> Active Loan Agreements
             </h3>
-            <ProTable headers={[{ label: 'Contract ID', className: 'hidden sm:table-cell' }, 'Principal', 'Issue Date', 'Next Due', 'Status', '']}>
-              {activeLoans.map((loan) => {
-                const totalDue = loan.upcomingPaymentAmount + (loan.latePaymentFee || 0);
-                const dueCounter = getDueDateCounter(loan.dueDate);
-                return (
-                  <tr key={loan.id}>
-                    <td className="hidden sm:table-cell"><span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">#{loan.id}</span></td>
-                    <td>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-bold text-slate-900">{formatMoney(loan.principalAmount)}</span>
-                        <span className="text-[9px] text-slate-400 sm:hidden font-bold tracking-widest">ID: #{loan.id}</span>
-                      </div>
-                    </td>
-                    <td><span className="text-xs font-medium text-slate-500">{formatDateDDMMYYYY(loan.disbursementDate)}</span></td>
-                    <td>
-                      <div className="flex flex-col">
-                        {(() => {
-                          const details = calculateLoanDetails({
-                            principal: loan.principalAmount,
-                            remainingPrincipal: loan.remainingPrincipal,
-                            duration: loan.duration,
-                            interestRate: loan.interestRate
-                          });
-                          const amt = details.monthlyPaymentCurrent || loan.upcomingPaymentAmount || 0;
-                          return <span className="text-xs font-bold text-slate-800">{formatMoney(amt)}</span>;
-                        })()}
-                        <span className={`text-[9px] font-bold uppercase mt-1 ${
-                          dueCounter.includes('overdue') ? 'text-white bg-rose-500 px-2 py-0.5 rounded shadow-sm inline-block' :
-                          dueCounter.includes('today') ? 'text-amber-500' : 'text-emerald-600'
-                        }`}>{dueCounter.includes('overdue') ? 'URGENT - PAY NOW' : dueCounter}</span>
-                      </div>
-                    </td>
-                    <td><StatusBadge status={loan.status} /></td>
-                    <td className="text-right">
-                      <button 
-                        onClick={() => setBreakdownModal(loan)}
-                        className="p-2 text-slate-300 hover:text-primary transition-colors"
-                      >
-                        <ArrowRight size={14} />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </ProTable>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+               {activeLoans.map(loan => {
+                  const today = new Date();
+                  const dueDate = loan.dueDate ? new Date(loan.dueDate) : null;
+                  let daysLate = 0;
+                  if (dueDate && !isNaN(dueDate.getTime()) && today > dueDate) {
+                    daysLate = Math.floor((today - dueDate) / (1000 * 60 * 60 * 24));
+                  }
+
+                  const details = calculateLoanDetails({
+                    principal: loan.principalAmount,
+                    remainingPrincipal: loan.remainingPrincipal || (loan.principalAmount - (loan.principalPaid || 0)),
+                    interestRate: loan.interestRate,
+                    duration: loan.duration,
+                    daysLate: daysLate,
+                    carriedForwardDue: loan.carriedForwardDue || 0
+                  });
+                  
+                  const dueCounter = getDueDateCounter(loan.dueDate);
+                  const isOverdue = dueCounter.includes('overdue');
+                  
+                  const outstandingBalance = loan.remainingPrincipal || (loan.principalAmount - (loan.principalPaid || 0));
+                  const remainingMonths = Math.max(0, loan.duration - (loan.paymentsMadeCount || 0));
+                  const totalInterestRemaining = details.monthlyInterest * remainingMonths;
+
+                  return (
+                    <div key={loan.id} className="pro-card p-6 border border-slate-200 bg-white shadow-sm flex flex-col space-y-6 cursor-pointer hover:border-primary/30 hover:shadow-md transition-all" onClick={() => setBreakdownModal(loan)}>
+                       <div className="flex justify-between items-start border-b border-slate-100 pb-4">
+                          <div>
+                             <p className="text-sm font-black text-slate-900 tracking-wider font-mono">{loan.id}</p>
+                             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">
+                               Approved: {formatMoney(loan.principalAmount)} <span className="mx-2 text-slate-300">|</span> Interest: {loan.interestRate}%
+                             </p>
+                          </div>
+                          <StatusBadge status={loan.status} />
+                       </div>
+
+                       <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2">Next Payment Due</p>
+                          <div className="flex items-center justify-between">
+                             <span className="text-2xl font-black text-primary">{formatMoney(details.monthlyPaymentCurrent + (isOverdue ? details.delinquentPenalty : 0))}</span>
+                             <div className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-widest ${isOverdue ? 'bg-rose-100 text-rose-600' : 'bg-amber-100 text-amber-600'}`}>
+                               {dueCounter}
+                             </div>
+                          </div>
+                          
+                          <div className="flex flex-col sm:flex-row items-center gap-3 mt-5">
+                             <button className="w-full sm:flex-1 h-10 bg-[#25D366]/10 text-[#25D366] border border-[#25D366]/20 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#25D366]/20 transition-colors flex items-center justify-center gap-2" onClick={(e) => { 
+                                e.stopPropagation(); 
+                                const dueAmt = details.monthlyPaymentCurrent + (isOverdue ? details.delinquentPenalty : 0);
+                                const msg = `Hello I would like to make a payment for this loan: ${loan.id}. Amount due: MXN $${dueAmt}. Please confirm the payment method and coordinate the receiving details.`;
+                                window.open(`https://wa.me/1234567890?text=${encodeURIComponent(msg)}`, '_blank');
+                             }}>
+                                <MessageCircle size={14} /> WhatsApp Payment
+                             </button>
+                             <button className="w-full sm:flex-1 h-10 bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-colors flex items-center justify-center gap-2" onClick={(e) => { e.stopPropagation(); setPaymentActionModal({ type: 'bank', loan }); }}>
+                                <Building size={14} /> Bank
+                             </button>
+                          </div>
+                       </div>
+
+                       <div className="grid grid-cols-2 gap-4 pt-2">
+                          <div>
+                             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Outstanding Balance</p>
+                             <p className="text-sm font-extrabold text-slate-900 mt-0.5">{formatMoney(outstandingBalance)}</p>
+                          </div>
+                          <div>
+                             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Total Interest Remaining</p>
+                             <p className="text-sm font-extrabold text-slate-900 mt-0.5">{formatMoney(totalInterestRemaining)}</p>
+                          </div>
+                       </div>
+                    </div>
+                  );
+               })}
+            </div>
           </div>
 
           {/* PENDING SECTION */}
@@ -174,19 +205,30 @@ export default function BorrowerDashboard() {
               <Calendar size={16} className="text-amber-500" /> Pipeline Applications
             </h3>
             <ProTable headers={[{ label: 'Reference', className: 'hidden sm:table-cell' }, 'Amount', { label: 'Submitted', className: 'hidden xs:table-cell' }, 'Status']}>
-              {pendingApps.map((app) => (
-                <tr key={app.id}>
-                  <td className="hidden sm:table-cell"><span className="text-[10px] font-bold text-slate-400 uppercase">#{app.id}</span></td>
-                  <td>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-bold text-slate-900">{formatMoney(app.principalAmount)}</span>
-                      <span className="text-[9px] text-slate-400 sm:hidden font-bold tracking-widest">Ref: #{app.id}</span>
-                    </div>
-                  </td>
-                  <td className="hidden xs:table-cell"><span className="text-xs font-medium text-slate-400">{formatDateDDMMYYYY(app.originationDate)}</span></td>
-                  <td><StatusBadge status="pending" /></td>
+              {pendingApps.length === 0 ? (
+                <tr>
+                   <td colSpan={4} className="text-center py-10 px-4">
+                      <div className="flex flex-col items-center justify-center opacity-50">
+                         <Calendar size={24} className="mb-2 text-slate-400" />
+                         <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest italic">No pending applications</p>
+                      </div>
+                   </td>
                 </tr>
-              ))}
+              ) : (
+                pendingApps.map((app) => (
+                  <tr key={app.id}>
+                    <td className="hidden sm:table-cell"><span className="text-[10px] font-bold text-slate-400 uppercase">#{app.id}</span></td>
+                    <td>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-bold text-slate-900">{formatMoney(app.principalAmount)}</span>
+                        <span className="text-[9px] text-slate-400 sm:hidden font-bold tracking-widest">Ref: #{app.id}</span>
+                      </div>
+                    </td>
+                    <td className="hidden xs:table-cell"><span className="text-xs font-medium text-slate-400">{formatDateDDMMYYYY(app.originationDate)}</span></td>
+                    <td><StatusBadge status="pending" /></td>
+                  </tr>
+                ))
+              )}
             </ProTable>
           </div>
         </div>
@@ -269,6 +311,28 @@ export default function BorrowerDashboard() {
                  <Building size={16} className="mr-2" /> Bank Transfer
               </Btn>
             </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Payment Action Dummy Modal */}
+      <Modal isOpen={!!paymentActionModal} onClose={() => setPaymentActionModal(null)} title="Bank Transfer">
+        {paymentActionModal && (
+          <div className="p-6 text-center space-y-6 animate-in zoom-in-95 duration-300">
+             <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto shadow-inner bg-slate-100 text-slate-500`}>
+               <Building size={32} />
+             </div>
+             <div>
+               <h3 className="text-xl font-black text-slate-900 tracking-tight mb-2">
+                 Bank Transfer Instructions
+               </h3>
+               <p className="text-sm font-medium text-slate-500 leading-relaxed max-w-sm mx-auto">
+                 Please transfer the funds to our official bank account. Account details will be shown here in the live version.
+               </p>
+             </div>
+             <div className="pt-4 border-t border-slate-100">
+               <Btn className="w-full h-12 shadow-lg" onClick={() => setPaymentActionModal(null)}>Got it</Btn>
+             </div>
           </div>
         )}
       </Modal>

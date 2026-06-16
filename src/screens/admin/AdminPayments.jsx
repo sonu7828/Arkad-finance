@@ -54,7 +54,8 @@ export default function AdminPayments() {
       principal: paymentModal.principalAmount,
       remainingPrincipal: outstandingPrincipal,
       duration: paymentModal.duration,
-      interestRate: paymentModal.interestRate || 5
+      interestRate: paymentModal.interestRate || 5,
+      carriedForwardDue: paymentModal.carriedForwardDue || 0
     });
 
     // Assume we calculate against monthly interest
@@ -92,7 +93,12 @@ export default function AdminPayments() {
     if (!paymentAnalysis) return;
     setSubmitting(true);
     setTimeout(() => {
-      recordPayment(paymentModal.id, parseFloat(payAmount));
+      recordPayment(paymentModal.id, parseFloat(payAmount), paymentAnalysis.interestDue, paymentAnalysis.interestDue);
+      
+      if (paymentAnalysis.scenario === 'PARTIAL PAYMENT') {
+        alert(`SMS SENT TO CLIENT:\n\n"Partial payment of ${formatMoney(payAmount)} recorded. Remaining: ${formatMoney(paymentAnalysis.carriedOver)}"`);
+      }
+
       setSubmitting(false);
       setPaymentModal(null);
       setPayAmount('');
@@ -168,9 +174,10 @@ export default function AdminPayments() {
                 principal: l.principalAmount,
                 remainingPrincipal: outstandingPrincipal,
                 duration: l.duration,
-                interestRate: l.interestRate || 5
+                interestRate: l.interestRate || 5,
+                carriedForwardDue: l.carriedForwardDue || 0
               });
-              const interestDue = details.monthlyInterest || (outstandingPrincipal * (l.interestRate || 5) / 100);
+              const interestDue = details.monthlyPaymentCurrent || details.monthlyInterest || (outstandingPrincipal * (l.interestRate || 5) / 100);
               const counter = getDueDateCounter(l.dueDate);
 
               return (
@@ -213,9 +220,10 @@ export default function AdminPayments() {
             principal: paymentModal.principalAmount,
             remainingPrincipal: outstandingPrincipal,
             duration: paymentModal.duration,
-            interestRate: paymentModal.interestRate || 5
+            interestRate: paymentModal.interestRate || 5,
+            carriedForwardDue: paymentModal.carriedForwardDue || 0
           });
-          const interestDue = details.monthlyInterest || (outstandingPrincipal * (paymentModal.interestRate || 5) / 100);
+          const interestDue = details.monthlyPaymentCurrent || details.monthlyInterest || (outstandingPrincipal * (paymentModal.interestRate || 5) / 100);
 
           return (
             <div className="space-y-6">
@@ -263,13 +271,23 @@ export default function AdminPayments() {
                   )}
 
                   {paymentAnalysis.scenario === 'PARTIAL PAYMENT' && (
-                    <div className="space-y-2 text-xs font-bold text-slate-600">
-                      <p>Borrower is paying less than the interest due.</p>
-                      <div className="flex justify-between items-center text-rose-500">
-                        <span>Shortfall (Carried Over)</span>
+                    <div className="space-y-3 text-sm font-bold text-slate-600 bg-rose-50/50 p-4 rounded-xl border border-rose-100">
+                      <div className="flex justify-between items-center text-slate-900">
+                        <span>Amount Due</span>
+                        <span>{formatMoney(paymentAnalysis.interestDue)}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-emerald-600">
+                        <span>Amount Received</span>
+                        <span>{formatMoney(payAmount)}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-rose-600 font-black pt-2 border-t border-rose-100">
+                        <span>Remaining</span>
                         <span>{formatMoney(paymentAnalysis.carriedOver)}</span>
                       </div>
-                      <p>Principal remains at <span className="text-slate-900">{formatMoney(outstandingPrincipal)}</span>.</p>
+                      <div className="pt-2">
+                        <p className="text-rose-500 font-black">Status: PARTIAL</p>
+                        <p className="text-xs text-rose-400 mt-1">Remaining {formatMoney(paymentAnalysis.carriedOver)} due next period</p>
+                      </div>
                     </div>
                   )}
 

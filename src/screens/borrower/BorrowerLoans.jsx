@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   CreditCard, Wallet, Clock, Plus, FileText,
-  ChevronRight, ShieldCheck, Scale, Activity, Calendar, FileUp, AlertCircle, CheckCircle2
+  ChevronRight, ShieldCheck, Scale, Activity, Calendar, FileUp, AlertCircle, CheckCircle2, MessageSquare
 } from 'lucide-react';
 import { PageTitle, StatusBadge, StatCard, Btn, ProTable, Modal, Divider } from '../../components/UI';
 import { calculateLoanDetails } from '../../utils/loanCalculator';
@@ -79,6 +79,11 @@ export default function BorrowerLoans() {
   const [error, setError] = useState('');
   const [showDeclineConfirm, setShowDeclineConfirm] = useState(false);
   const [successMsg, setSuccessMsg] = useState(null);
+  const [paymentActionModal, setPaymentActionModal] = useState(null);
+
+  const [disbursementMethod, setDisbursementMethod] = useState('bank');
+  const [bankDetails, setBankDetails] = useState({ bankName: '', account: '', swift: '' });
+  const [cashDetails, setCashDetails] = useState({ address: '', timePref: '' });
 
   const handleAccept = () => {
     setError('');
@@ -94,6 +99,18 @@ export default function BorrowerLoans() {
       return;
     }
 
+    if (disbursementMethod === 'bank') {
+      if (!bankDetails.bankName || !bankDetails.account || !bankDetails.swift) {
+         setError('Please provide all bank account details.');
+         return;
+      }
+    } else {
+      if (!cashDetails.address || !cashDetails.timePref) {
+         setError('Please provide cash delivery address and time preference.');
+         return;
+      }
+    }
+
     setIsAccepting(true);
     setTimeout(() => {
       const todayStr = new Date().toISOString().split('T')[0];
@@ -107,7 +124,9 @@ export default function BorrowerLoans() {
         dueDate: dueDateStr,
         signatureName: signatureName,
         signatureDate: todayStr,
-        remainingPrincipal: acceptTermsModal.principalAmount
+        remainingPrincipal: acceptTermsModal.principalAmount,
+        disbursementMethod: disbursementMethod,
+        disbursementDetails: disbursementMethod === 'bank' ? bankDetails : cashDetails
       });
       
       setIsAccepting(false);
@@ -214,7 +233,7 @@ export default function BorrowerLoans() {
             else setViewModal(loan);
           }}
         >
-          {loan.status === 'terms_set' ? 'Review Terms' : 'Details'}
+          {loan.status === 'terms_set' ? 'Arrange Disbursement' : 'Details'}
         </Btn>
       )
     }
@@ -237,6 +256,97 @@ export default function BorrowerLoans() {
         <StatCard label="Active Balance" value={formatMoney(totalOutstanding)} icon={Wallet} color="text-primary" />
         <StatCard label="Next Payment Due" value={formatDateDDMMYYYY(loans.find(l => l.status === 'active')?.dueDate)} icon={Clock} color="text-amber-500" />
       </section>
+
+      {/* Active Loans Section */}
+      {loans.filter(l => ['active', 'late'].includes((l.status || '').toLowerCase())).length > 0 && (
+        <div className="space-y-6 animate-in slide-in-from-bottom-8 duration-700">
+          <div className="flex items-center justify-between px-2">
+            <div>
+              <h3 className="text-xl font-bold text-slate-800 tracking-tight">Active Loan Management</h3>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 italic">Your current active credit accounts</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+             {loans.filter(l => ['active', 'late'].includes((l.status || '').toLowerCase())).map(loan => {
+                const today = new Date();
+                const dueDate = loan.dueDate ? new Date(loan.dueDate) : null;
+                let daysLate = 0;
+                if (dueDate && !isNaN(dueDate.getTime()) && today > dueDate) {
+                  daysLate = Math.floor((today - dueDate) / (1000 * 60 * 60 * 24));
+                }
+
+                const details = calculateLoanDetails({
+                  principal: loan.principalAmount,
+                  remainingPrincipal: loan.remainingPrincipal || (loan.principalAmount - (loan.principalPaid || 0)),
+                  interestRate: loan.interestRate,
+                  duration: loan.duration,
+                  daysLate: daysLate,
+                  carriedForwardDue: loan.carriedForwardDue || 0
+                });
+                
+                const dueCounter = getDueDateCounter(loan.dueDate);
+                const isOverdue = dueCounter.includes('overdue');
+                
+                const outstandingBalance = loan.remainingPrincipal || (loan.principalAmount - (loan.principalPaid || 0));
+                // Rough estimate for total interest remaining for the rest of the term
+                const remainingMonths = Math.max(0, loan.duration - (loan.paymentsMadeCount || 0));
+                const totalInterestRemaining = details.monthlyInterest * remainingMonths;
+
+                return (
+                  <div key={loan.id} className="pro-card p-6 border border-slate-200 bg-white shadow-sm flex flex-col space-y-6 cursor-pointer hover:border-primary/30 hover:shadow-md transition-all" onClick={() => setViewModal(loan)}>
+                     {/* Header */}
+                     <div className="flex justify-between items-start border-b border-slate-100 pb-4">
+                        <div>
+                           <p className="text-sm font-black text-slate-900 tracking-wider font-mono">{loan.id}</p>
+                           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">
+                             Approved: {formatMoney(loan.principalAmount)} <span className="mx-2 text-slate-300">|</span> Interest: {loan.interestRate}%
+                           </p>
+                        </div>
+                        <StatusBadge status={loan.status} />
+                     </div>
+
+                     {/* Next Payment Info */}
+                     <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2">Next Payment Due</p>
+                        <div className="flex items-center justify-between">
+                           <span className="text-2xl font-black text-primary">{formatMoney(details.monthlyPaymentCurrent + (isOverdue ? details.delinquentPenalty : 0))}</span>
+                           <div className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-widest ${isOverdue ? 'bg-rose-100 text-rose-600' : 'bg-amber-100 text-amber-600'}`}>
+                             {dueCounter}
+                           </div>
+                        </div>
+                        
+                        <div className="flex flex-col sm:flex-row items-center gap-3 mt-5">
+                           <button className="w-full sm:flex-1 h-10 bg-[#25D366]/10 text-[#25D366] border border-[#25D366]/20 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#25D366]/20 transition-colors flex items-center justify-center gap-2" onClick={(e) => { 
+                                e.stopPropagation(); 
+                                const dueAmt = details.monthlyPaymentCurrent + (isOverdue ? details.delinquentPenalty : 0);
+                                const msg = `Hello I would like to make a payment for this loan: ${loan.id}. Amount due: MXN $${dueAmt}. Please confirm the payment method and coordinate the receiving details.`;
+                                window.open(`https://wa.me/1234567890?text=${encodeURIComponent(msg)}`, '_blank');
+                           }}>
+                              <MessageSquare size={14} /> WhatsApp Payment
+                           </button>
+                           <button className="w-full sm:flex-1 h-10 bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-colors flex items-center justify-center gap-2" onClick={(e) => { e.stopPropagation(); setPaymentActionModal({ type: 'bank', loan }); }}>
+                              <Wallet size={14} /> Bank
+                           </button>
+                        </div>
+                     </div>
+
+                     {/* Footer Stats */}
+                     <div className="grid grid-cols-2 gap-4 pt-2">
+                        <div>
+                           <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Outstanding Balance</p>
+                           <p className="text-sm font-extrabold text-slate-900 mt-0.5">{formatMoney(outstandingBalance)}</p>
+                        </div>
+                        <div>
+                           <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Total Interest Remaining</p>
+                           <p className="text-sm font-extrabold text-slate-900 mt-0.5">{formatMoney(totalInterestRemaining)}</p>
+                        </div>
+                     </div>
+                  </div>
+                );
+             })}
+          </div>
+        </div>
+      )}
 
       <div className="space-y-6">
         <div className="flex items-center justify-between px-2">
@@ -493,12 +603,12 @@ export default function BorrowerLoans() {
         )}
       </Modal>
 
-      <Modal isOpen={!!acceptTermsModal} onClose={() => setAcceptTermsModal(null)} title="Loan Confirmation">
+      <Modal isOpen={!!acceptTermsModal} onClose={() => setAcceptTermsModal(null)} title="Arrange Disbursement">
         {acceptTermsModal && (
-          <div className="space-y-8">
+          <div className="space-y-8 animate-in fade-in duration-500">
             <div className="space-y-3">
-              <h3 className="text-xl font-bold text-slate-800 tracking-tight">Review Agreement Terms</h3>
-              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest italic leading-relaxed">Please review the finalized loan parameters before accepting the agreement.</p>
+              <h3 className="text-xl font-bold text-slate-800 tracking-tight">Approved - Arrange Disbursement</h3>
+              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest italic leading-relaxed">Review the finalized loan parameters and configure your disbursement method.</p>
             </div>
 
             {(() => {
@@ -623,21 +733,51 @@ export default function BorrowerLoans() {
 
                       {/* Section D: Bank Details */}
                       <div className="pt-4 border-t border-slate-200/50 text-xs font-bold text-slate-700">
-                         <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] italic pb-3 border-b border-slate-200/60 mb-3">V. Bank & Disbursement Details</h5>
-                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                            <div>
-                               <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Account Holder</p>
-                               <p className="text-xs font-extrabold text-slate-800">{acceptTermsModal.bankHolderName || acceptTermsModal.user?.name || user?.name}</p>
-                            </div>
-                            <div>
-                               <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Bank Name</p>
-                               <p className="text-xs font-extrabold text-slate-800">{acceptTermsModal.bankName || '—'}</p>
-                            </div>
-                            <div className="col-span-2 sm:col-span-1">
-                               <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Account / CLABE</p>
-                               <p className="text-xs font-extrabold text-slate-800 font-mono tracking-wide">{acceptTermsModal.accountNumber || '—'}</p>
-                            </div>
+                         <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] italic pb-3 border-b border-slate-200/60 mb-3">V. Disbursement Method</h5>
+                         
+                         <div className="flex gap-4 mb-4">
+                            <label className={`flex-1 flex items-center justify-center p-3 border rounded-xl cursor-pointer transition-all ${disbursementMethod === 'bank' ? 'bg-primary/5 border-primary text-primary' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
+                               <input type="radio" name="disbursement" value="bank" className="hidden" checked={disbursementMethod === 'bank'} onChange={() => setDisbursementMethod('bank')} />
+                               <Wallet size={16} className="mr-2" /> <span className="font-bold text-xs uppercase tracking-widest">Bank Transfer</span>
+                            </label>
+                            <label className={`flex-1 flex items-center justify-center p-3 border rounded-xl cursor-pointer transition-all ${disbursementMethod === 'cash' ? 'bg-primary/5 border-primary text-primary' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
+                               <input type="radio" name="disbursement" value="cash" className="hidden" checked={disbursementMethod === 'cash'} onChange={() => setDisbursementMethod('cash')} />
+                               <CreditCard size={16} className="mr-2" /> <span className="font-bold text-xs uppercase tracking-widest">Cash Delivery</span>
+                            </label>
                          </div>
+
+                         {disbursementMethod === 'bank' ? (
+                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                              <div className="space-y-1">
+                                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-1">Bank Name</p>
+                                 <input type="text" placeholder="e.g. BBVA" value={bankDetails.bankName} onChange={e => setBankDetails({...bankDetails, bankName: e.target.value})} className="w-full h-10 px-3 bg-white border border-slate-200 rounded-lg text-xs font-bold outline-none focus:border-primary/40" />
+                              </div>
+                              <div className="space-y-1">
+                                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-1">Account Number / CLABE</p>
+                                 <input type="text" placeholder="18 digit CLABE" value={bankDetails.account} onChange={e => setBankDetails({...bankDetails, account: e.target.value})} className="w-full h-10 px-3 bg-white border border-slate-200 rounded-lg text-xs font-bold font-mono outline-none focus:border-primary/40" />
+                              </div>
+                              <div className="space-y-1">
+                                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-1">SWIFT Code</p>
+                                 <input type="text" placeholder="Optional SWIFT" value={bankDetails.swift} onChange={e => setBankDetails({...bankDetails, swift: e.target.value})} className="w-full h-10 px-3 bg-white border border-slate-200 rounded-lg text-xs font-bold font-mono outline-none focus:border-primary/40" />
+                              </div>
+                           </div>
+                         ) : (
+                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div className="space-y-1">
+                                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-1">Delivery Address</p>
+                                 <input type="text" placeholder="Full address for cash pickup" value={cashDetails.address} onChange={e => setCashDetails({...cashDetails, address: e.target.value})} className="w-full h-10 px-3 bg-white border border-slate-200 rounded-lg text-xs font-bold outline-none focus:border-primary/40" />
+                              </div>
+                              <div className="space-y-1">
+                                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-1">Time Preference</p>
+                                 <input type="text" placeholder="e.g. Tomorrow between 2 PM - 5 PM" value={cashDetails.timePref} onChange={e => setCashDetails({...cashDetails, timePref: e.target.value})} className="w-full h-10 px-3 bg-white border border-slate-200 rounded-lg text-xs font-bold outline-none focus:border-primary/40" />
+                              </div>
+                           </div>
+                         )}
+                         <p className="text-[10px] text-slate-400 font-bold italic mt-4 leading-relaxed">
+                           {disbursementMethod === 'bank' 
+                             ? "Staff will verify these account details and initiate the transfer upon final acceptance." 
+                             : "An agent will be notified to arrange cash delivery at your preferred location and time."}
+                         </p>
                       </div>
 
                      {/* Section E: Cost Summary Box */}
@@ -717,6 +857,26 @@ export default function BorrowerLoans() {
             })()}
           </div>
         )}
+      </Modal>
+
+      <Modal isOpen={!!paymentActionModal} onClose={() => setPaymentActionModal(null)} title="Bank Transfer">
+        <div className="p-4 sm:p-6 text-center space-y-6 animate-in zoom-in-95 duration-300">
+          <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto shadow-inner bg-slate-100 text-slate-500`}>
+            <Wallet size={32} />
+          </div>
+          <div>
+            <h3 className="text-xl font-black text-slate-900 tracking-tight mb-2">
+              Bank Transfer Instructions
+            </h3>
+            <p className="text-sm font-medium text-slate-500 leading-relaxed max-w-sm mx-auto">
+              Please transfer the funds to our official bank account. Account details will be shown here in the live version.
+            </p>
+          </div>
+          <Btn onClick={() => {
+            const message = `Hello, I would like to make a payment for my loan: ${paymentActionModal.id}`;
+            window.open(`https://wa.me/5215512345678?text=${encodeURIComponent(message)}`, '_blank');
+          }} className="w-full h-12 bg-[#25D366] hover:bg-[#128C7E] shadow-lg">Contact via WhatsApp</Btn>
+        </div>
       </Modal>
 
       <Modal isOpen={showDeclineConfirm} onClose={() => setShowDeclineConfirm(false)} title="Confirm Decline">
