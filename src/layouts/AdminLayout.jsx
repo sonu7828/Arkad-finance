@@ -28,7 +28,7 @@ export default function AdminLayout() {
       </aside>
 
       {/* Desktop Sidebar - Zoho Style Light Sidebar */}
-      <aside className={`hidden lg:flex flex-col shrink-0 h-screen sticky top-0 bg-white border-r border-slate-200/60 overflow-hidden transition-all duration-300 ease-in-out z-50 ${isSidebarCollapsed ? 'w-[80px]' : 'w-[260px]'}`}>
+      <aside className={`hidden lg:flex flex-col shrink-0 h-screen sticky top-0 bg-white border-r border-slate-200/60 overflow-hidden transition-all duration-300 ease-in-out z-50 ${isSidebarCollapsed ? 'w-[80px]' : 'w-[230px]'}`}>
         <RoleSidebarNav routeRole="admin" isCollapsed={isSidebarCollapsed} setIsSidebarCollapsed={setIsSidebarCollapsed} onLinkClick={() => {}} />
       </aside>
 
@@ -72,8 +72,8 @@ export default function AdminLayout() {
         </header>
 
         {/* Main content - Higher density padding */}
-        <main className="flex-1 p-4 md:p-8 pb-10 overflow-y-auto">
-          <div className="max-w-[1600px] mx-auto animate-fade-in">
+        <main className="flex-1 p-4 md:p-6 pb-8 overflow-y-auto">
+          <div className="max-w-[1750px] mx-auto animate-fade-in">
             <Outlet />
           </div>
         </main>

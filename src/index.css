@@ -66,7 +66,7 @@
   }
 
   .sidebar-link {
-    @apply flex items-center gap-3 px-5 py-3.5 rounded-2xl text-sm font-bold transition-all duration-300 hover:bg-slate-100 hover:translate-x-1 active:scale-95;
+    @apply flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-[13.5px] font-semibold transition-all duration-300 hover:bg-slate-100 hover:translate-x-1 active:scale-95;
   }
 
   .btn-glow:hover {
