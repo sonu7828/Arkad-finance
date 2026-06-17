@@ -332,20 +332,9 @@ export default function AgentClients() {
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mt-1 italic">Authorized Agent Client Portfolio</p>
         </div>
         <div className="flex items-center gap-3">
-<<<<<<< HEAD
           <Btn variant="outline" size="sm" onClick={handleExport} className="rounded-xl italic">
             <DownloadIcon size={14} className="mr-2" /> Export
           </Btn>
-=======
-          <Btn variant="outline" size="sm" onClick={generateDummyPaymentsData} className="rounded-xl italic flex items-center gap-2">
-            <Plus size={14} /> Generate Trial Data
-          </Btn>
-          {activeTab !== 'EARNINGS' && (
-            <Btn variant="outline" size="sm" onClick={handleExport} className="rounded-xl italic">
-              <DownloadIcon size={14} className="mr-2" /> Export
-            </Btn>
-          )}
->>>>>>> e5e1eff6c5ec4d4ac216153fc50d04e3e1f6a1f2
         </div>
       </div>
 
@@ -367,8 +356,8 @@ export default function AgentClients() {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${activeTab === tab.id
-                  ? 'bg-white text-primary shadow-sm border border-slate-200'
-                  : 'text-slate-500 hover:text-slate-800 hover:bg-slate-200/50'
+                ? 'bg-white text-primary shadow-sm border border-slate-200'
+                : 'text-slate-500 hover:text-slate-800 hover:bg-slate-200/50'
                 }`}
             >
               {tab.label}
@@ -484,8 +473,8 @@ export default function AgentClients() {
                   <td className="font-black text-slate-950">${row.commission.toFixed(2)}</td>
                   <td>
                     <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${row.status === 'Paid'
-                        ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                        : 'bg-amber-50 text-amber-600 border-amber-100'
+                      ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                      : 'bg-amber-50 text-amber-600 border-amber-100'
                       }`}>
                       {row.status}
                     </span>

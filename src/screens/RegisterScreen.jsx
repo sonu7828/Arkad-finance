@@ -64,6 +64,13 @@ export default function RegisterScreen({ fixedRole }) {
       setError('Please fill out all required fields.');
       return;
     }
+
+    const passRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=\[\]{}|\\:;"'<>,.?/~`]).{8,}$/;
+    if (!passRegex.test(form.password)) {
+      setError('Password must be at least 8 chars, 1 uppercase, 1 number, and 1 special character.');
+      return;
+    }
+
     setError('');
     setLoading(true);
     
