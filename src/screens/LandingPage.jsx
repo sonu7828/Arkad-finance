@@ -114,14 +114,14 @@ export default function LandingPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 overflow-x-hidden font-sans selection:bg-primary selection:text-white" style={{ zoom: 1.1 }}>
+    <div className="min-h-screen bg-slate-50 text-slate-800 overflow-x-hidden font-sans selection:bg-primary selection:text-white">
       
       {/* Grid Pattern Background overlay across the whole page */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none -z-20" />
 
       {/* ── HEADER / NAVBAR ── */}
       <nav className="fixed top-0 left-0 w-full z-50 bg-white/70 backdrop-blur-xl border-b border-slate-200/50 transition-all duration-300">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           
           {/* Logo */}
           <div className="flex items-center gap-3 cursor-pointer group" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
@@ -160,7 +160,7 @@ export default function LandingPage() {
       </nav>
 
       {/* ── HERO SECTION ── */}
-      <header className="relative pt-20 pb-16 sm:pt-24 sm:pb-24 overflow-hidden bg-gradient-to-b from-white via-white to-transparent">
+      <header className="relative pt-16 pb-12 sm:pt-20 sm:pb-16 overflow-hidden bg-gradient-to-b from-white via-white to-transparent">
         {/* Soft Background Gradients */}
         <div className="absolute top-1/4 left-1/4 w-[400px] h-[400px] bg-primary/10 blur-[120px] rounded-full -translate-x-1/2 -translate-y-1/2 -z-10 animate-pulse" />
         <div className="absolute top-1/3 right-1/4 w-[600px] h-[600px] bg-indigo-500/5 blur-[160px] rounded-full translate-x-1/2 -z-10" />
@@ -289,10 +289,10 @@ export default function LandingPage() {
       </header>
 
       {/* ── COMPANY STATISTICS ── */}
-      <section className="relative py-16 overflow-hidden">
+      <section className="relative py-10 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-indigo-50 via-slate-100 to-indigo-50 border-y border-slate-200/60 -z-10" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white/60 border border-white rounded-[2rem] p-8 sm:p-12 backdrop-blur-xl shadow-xl shadow-slate-100/50">
+          <div className="bg-white/60 border border-white rounded-[2rem] p-6 sm:p-8 backdrop-blur-xl shadow-xl shadow-slate-100/50">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center divide-x-0 sm:divide-x divide-slate-200">
               {stats.map((stat, i) => (
                 <div key={i} className="space-y-2 px-2">
@@ -306,8 +306,8 @@ export default function LandingPage() {
       </section>
 
       {/* ── HOW IT WORKS ── */}
-      <section id="how-it-works" className="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative bg-slate-50">
-        <div className="text-center max-w-2xl mx-auto space-y-4 mb-16">
+      <section id="how-it-works" className="py-14 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative bg-slate-50">
+        <div className="text-center max-w-2xl mx-auto space-y-4 mb-10">
           <h2 className="text-[10px] font-black text-primary uppercase tracking-[0.3em] italic">01 / Flow</h2>
           <h3 className="text-3xl sm:text-4xl font-black text-slate-900 italic uppercase">How It Works</h3>
           <p className="text-slate-500 text-sm font-medium">Four simple steps to secure your capital with absolute transparency.</p>
@@ -334,12 +334,12 @@ export default function LandingPage() {
       </section>
 
       {/* ── TRUST INDICATORS ── */}
-      <section id="why-choose-us" className="py-24 bg-white border-y border-slate-200/60 relative">
+      <section id="why-choose-us" className="py-14 bg-white border-y border-slate-200/60 relative">
         {/* Soft decorative background circles */}
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-50/20 blur-[120px] rounded-full -z-10" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto space-y-4 mb-16">
+          <div className="text-center max-w-2xl mx-auto space-y-4 mb-10">
             <h2 className="text-[10px] font-black text-primary uppercase tracking-[0.3em] italic">02 / Security</h2>
             <h3 className="text-3xl sm:text-4xl font-black text-slate-900 italic uppercase">Trust Indicators</h3>
             <p className="text-slate-500 text-sm font-medium">Compliance, security, and processing architectures built to protect your identity.</p>
@@ -364,7 +364,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── TESTIMONIALS ── */}
-      <section id="testimonials" className="py-24 bg-gradient-to-b from-slate-50 via-slate-100/40 to-slate-50 relative">
+      <section id="testimonials" className="py-14 bg-gradient-to-b from-slate-50 via-slate-100/40 to-slate-50 relative">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center space-y-6">
           <h2 className="text-[10px] font-black text-primary uppercase tracking-[0.3em] italic">03 / Experience</h2>
           <h3 className="text-3xl sm:text-4xl font-black text-slate-900 italic uppercase leading-none">Customer Testimonials</h3>
@@ -398,7 +398,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── FOOTER ── */}
-      <footer className="bg-white border-t border-slate-200/60 py-16 text-slate-500 text-[10px] relative">
+      <footer className="bg-white border-t border-slate-200/60 py-10 text-slate-500 text-[10px] relative">
         {/* Subtle top decoration */}
         <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
 
