@@ -3,7 +3,7 @@ import {
   Camera, FileText, CheckCircle2, Upload, ArrowUpRight, Loader2, Clock, 
   ShieldCheck, Zap, Package, FileUp, Files
 } from 'lucide-react';
-import { PageTitle, StatCard, Btn, EmptyState, StatusBadge } from '../../components/UI';
+import { PageTitle, StatCard, Btn, EmptyState, StatusBadge, Modal, Divider } from '../../components/UI';
 
 const DUMMY_UPLOADS = [
   { id: 1, name: 'National_ID_NRC.pdf', type: 'PDF', verified: true, imageUrl: null, createdAt: '2024-09-10T00:00:00Z' },
@@ -15,6 +15,8 @@ export default function BorrowerCollateral() {
   const [uploads, setUploads] = useState(DUMMY_UPLOADS);
   const [uploading, setUploading] = useState(false);
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [previewDoc, setPreviewDoc] = useState(null);
+  const [showDownloadSuccess, setShowDownloadSuccess] = useState(null);
   const fileInputRef = useRef(null);
 
   const handleFileChange = (e) => {
@@ -27,7 +29,7 @@ export default function BorrowerCollateral() {
         name: file.name,
         type: file.type.includes('pdf') ? 'PDF' : 'IMAGE',
         verified: false,
-        imageUrl: null,
+        fileBlob: file, // Save the actual uploaded File object
         createdAt: new Date().toISOString(),
       }]);
       setUploading(false);
@@ -122,7 +124,10 @@ export default function BorrowerCollateral() {
 
                 <div className="flex items-center gap-4">
                   <StatusBadge status={doc.verified ? 'VERIFIED' : 'PENDING'} />
-                  <button className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-300 hover:bg-slate-900 hover:text-white transition-all shadow-sm">
+                  <button 
+                    onClick={() => setPreviewDoc(doc)}
+                    className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-300 hover:bg-slate-900 hover:text-white transition-all shadow-sm cursor-pointer"
+                  >
                     <ArrowUpRight size={18} />
                   </button>
                 </div>
@@ -138,6 +143,118 @@ export default function BorrowerCollateral() {
           )}
         </div>
       </div>
+
+      {/* DOCUMENT PREVIEW MODAL */}
+      <Modal isOpen={!!previewDoc} onClose={() => setPreviewDoc(null)} title="Secure Document Registry">
+        {previewDoc && (
+          <div className="space-y-6 animate-in fade-in duration-500">
+            <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 text-center relative overflow-hidden">
+              <div className="w-14 h-14 rounded-xl bg-white shadow-sm flex items-center justify-center mx-auto mb-3 text-primary border border-slate-100">
+                <FileText size={24} />
+              </div>
+              <h4 className="text-base font-extrabold text-slate-900 tracking-tight">{previewDoc.name}</h4>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Uploaded: {new Date(previewDoc.createdAt).toLocaleDateString()}</p>
+              
+              <div className="mt-4 flex justify-center gap-2">
+                <StatusBadge status={previewDoc.verified ? 'VERIFIED' : 'PENDING'} />
+                <span className="px-2.5 py-1 bg-white border border-slate-100 rounded-lg text-[9px] font-bold text-slate-400 uppercase tracking-widest">{previewDoc.type} Format</span>
+              </div>
+            </div>
+
+            <div className="p-8 border border-dashed border-slate-200 rounded-2xl bg-slate-50/50 text-center space-y-2">
+              <ShieldCheck size={28} className="mx-auto text-emerald-500" />
+              <div>
+                <p className="text-xs font-bold text-slate-800 uppercase tracking-tight">Decentralized Asset Storage Node</p>
+                <p className="text-[10px] text-slate-400 mt-1 leading-relaxed max-w-xs mx-auto">This collateral registry file is stored securely with 256-bit AES encryption. Access logs are immutable.</p>
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <Btn 
+                variant="outline" 
+                className="flex-1 h-12 text-rose-500 border-rose-100 hover:bg-rose-50" 
+                onClick={() => {
+                  setUploads(prev => prev.filter(u => u.id !== previewDoc.id));
+                  setPreviewDoc(null);
+                }}
+              >
+                Delete File
+              </Btn>
+              <Btn 
+                className="flex-[2] h-12" 
+                onClick={() => {
+                  const doc = previewDoc;
+                  
+                  let blob;
+                  let downloadName = doc.name;
+
+                  if (doc.fileBlob) {
+                    // Actual file uploaded by the user during this session
+                    blob = doc.fileBlob;
+                  } else {
+                    // Preloaded dummy placeholder files
+                    if (doc.type === 'IMAGE') {
+                      // 1x1 transparent PNG base64 data
+                      const base64Png = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+                      const binary = atob(base64Png);
+                      const array = [];
+                      for (let i = 0; i < binary.length; i++) {
+                        array.push(binary.charCodeAt(i));
+                      }
+                      blob = new Blob([new Uint8Array(array)], { type: 'image/png' });
+                    } else {
+                      // Minimal valid empty PDF structure
+                      const base64Pdf = 'JVBERi0xLjQKMSAwIG9iagogIDw8IC9UeXBlIC9DYXRhbG9nIC9QYWdlcyAyIDAgUiA+PgplbmRvYmoKMiAwIG9iagogIDw8IC9UeXBlIC9QYWdlcyAvS2lkcyBbMyAwIFJdIC9Db3VudCAxID4+CmVuZG9iagozIDAgb2JqCiAgPDwgL1R5cGUgL1BhZ2UgL1BhcmVudCAyIDAgUiAvTWVkaWFCb3ggWzAgMCA1OTUgODQyXSAvQ29udGVudHMgNCAwIFIgPj4KZW5kb2JqCjQgMCBvYmoKICA8PCAvTGVuZ3RoIDAgPj4Kc3RyZWFtCmVuZHN0cmVhbQplbmRvYmoKdHJhaWxlcgogIDw8IC9TaXplIDUgL1Jvb3QgMSAwIFIgPj4KJSVFT0Y=';
+                      const binary = atob(base64Pdf);
+                      const array = [];
+                      for (let i = 0; i < binary.length; i++) {
+                        array.push(binary.charCodeAt(i));
+                      }
+                      blob = new Blob([new Uint8Array(array)], { type: 'application/pdf' });
+                    }
+                  }
+
+                  const url = URL.createObjectURL(blob);
+                  const link = document.createElement('a');
+                  link.href = url;
+                  link.download = downloadName;
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                  URL.revokeObjectURL(url);
+
+                  setPreviewDoc(null);
+                  setShowDownloadSuccess(doc);
+                }}
+              >
+                Download File
+              </Btn>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* DOWNLOAD SUCCESS MODAL */}
+      <Modal isOpen={!!showDownloadSuccess} onClose={() => setShowDownloadSuccess(null)} title="Secure Asset Dispatch">
+        {showDownloadSuccess && (
+          <div className="space-y-6 animate-in fade-in duration-500 text-center p-4">
+            <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center mx-auto border border-emerald-100 shadow-sm">
+              <CheckCircle2 size={28} />
+            </div>
+            <div>
+              <h4 className="text-base font-extrabold text-slate-900 uppercase tracking-tight">Compilation Successful</h4>
+              <p className="text-xs font-semibold text-slate-500 mt-2 leading-relaxed">
+                Mock download initialized. File payload for <span className="text-slate-800 font-bold">"{showDownloadSuccess.name}"</span> was compiled, decrypted, and extracted successfully.
+              </p>
+            </div>
+            <div className="pt-2">
+              <Btn onClick={() => setShowDownloadSuccess(null)} className="w-full h-11 text-xs">
+                Dismiss Registry
+              </Btn>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

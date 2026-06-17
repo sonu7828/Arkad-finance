@@ -80,6 +80,8 @@ export default function AdminCRM() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [showRemindersModal, setShowRemindersModal] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [deleteConfirmLeadId, setDeleteConfirmLeadId] = useState(null);
+  const [customAlertMsg, setCustomAlertMsg] = useState(null);
   const [newLead, setNewLead] = useState({ name: '', email: '', phone: '', status: 'NEW SIGNUP', notes: '' });
 
   // Sync with localStorage
@@ -127,8 +129,13 @@ export default function AdminCRM() {
   };
 
   const handleDeleteLead = (id) => {
-    if(window.confirm("Are you sure you want to remove this lead?")) {
-      setLeads(leads.filter(l => l.id !== id));
+    setDeleteConfirmLeadId(id);
+  };
+
+  const confirmDeleteLead = () => {
+    if (deleteConfirmLeadId) {
+      setLeads(leads.filter(l => l.id !== deleteConfirmLeadId));
+      setDeleteConfirmLeadId(null);
       setViewModal(null);
     }
   };
@@ -252,13 +259,13 @@ export default function AdminCRM() {
                 <td className="px-6 py-5 text-right" onClick={(e) => e.stopPropagation()}>
                   <div className="flex justify-end gap-2">
                     <button 
-                      onClick={() => alert(`Calling ${lead.name} at ${lead.phone}...`)}
+                      onClick={() => setCustomAlertMsg(`Initiating outbound cellular voice connection to ${lead.name} at ${lead.phone}...`)}
                       className="p-2 hover:bg-primary/10 text-slate-400 hover:text-primary rounded-lg transition-colors"
                     >
                       <PhoneCall size={16} />
                     </button>
                     <button 
-                      onClick={() => alert(`Message composer opened for ${lead.email}`)}
+                      onClick={() => setCustomAlertMsg(`Opening secure message dispatch console for recipient: ${lead.email}`)}
                       className="p-2 hover:bg-primary/10 text-slate-400 hover:text-primary rounded-lg transition-colors"
                     >
                       <MessageSquare size={16} />
@@ -433,6 +440,51 @@ export default function AdminCRM() {
             </Btn>
           </div>
         </div>
+      </Modal>
+
+      {/* CUSTOM CONFIRM MODAL FOR DELETE LEAD */}
+      <Modal isOpen={!!deleteConfirmLeadId} onClose={() => setDeleteConfirmLeadId(null)} title="System Overwrite Confirmation" size="sm">
+        <div className="space-y-6 text-center p-4">
+          <div className="w-14 h-14 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center mx-auto border border-rose-100 shadow-sm animate-pulse">
+            <Trash2 size={24} />
+          </div>
+          <div>
+            <h4 className="text-base font-extrabold text-slate-900 uppercase tracking-tight">Remove Prospect Record?</h4>
+            <p className="text-xs font-semibold text-slate-500 mt-2 leading-relaxed">
+              Are you sure you want to permanently delete this lead from the CRM pipeline? This action cannot be undone.
+            </p>
+          </div>
+          <div className="flex gap-3 pt-2">
+            <Btn variant="outline" className="flex-1 h-12" onClick={() => setDeleteConfirmLeadId(null)}>
+              Cancel
+            </Btn>
+            <Btn variant="danger" className="flex-[2] h-12 shadow-lg shadow-rose-500/10" onClick={confirmDeleteLead}>
+              Confirm Delete
+            </Btn>
+          </div>
+        </div>
+      </Modal>
+
+      {/* CUSTOM ALERT MODAL */}
+      <Modal isOpen={!!customAlertMsg} onClose={() => setCustomAlertMsg(null)} title="CRM Communication Sync" size="sm">
+        {customAlertMsg && (
+          <div className="space-y-6 text-center p-4">
+            <div className="w-14 h-14 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto border border-primary/10 shadow-sm">
+              <Zap size={24} />
+            </div>
+            <div>
+              <h4 className="text-base font-extrabold text-slate-900 uppercase tracking-tight">Active Operation</h4>
+              <p className="text-xs font-semibold text-slate-500 mt-2 leading-relaxed">
+                {customAlertMsg}
+              </p>
+            </div>
+            <div className="pt-2">
+              <Btn className="w-full h-11 text-xs" onClick={() => setCustomAlertMsg(null)}>
+                Acknowledge & Close
+              </Btn>
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   );

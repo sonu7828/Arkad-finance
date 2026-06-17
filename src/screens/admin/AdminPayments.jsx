@@ -275,7 +275,7 @@ export default function AdminPayments() {
       )}
 
       {/* COMPACT STATS ROW */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <div className="pro-card p-3 flex items-center gap-3 bg-rose-50/50 border-rose-100">
           <div className="w-8 h-8 rounded-lg bg-rose-100 flex items-center justify-center shrink-0">
             <ShieldAlert size={14} className="text-rose-500" />
@@ -390,7 +390,7 @@ export default function AdminPayments() {
                   )}
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <div className="flex items-center justify-end gap-1.5">
+                  <div className="flex flex-col sm:flex-row items-end sm:items-center justify-end gap-1.5">
                     <Btn size="sm" variant="success" className="!py-1.5 !px-2.5 text-[9px]" onClick={() => handleOpenExact(l)}>
                       ✓ Exact
                     </Btn>
