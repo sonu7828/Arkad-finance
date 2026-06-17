@@ -119,27 +119,7 @@ export default function StaffProfile() {
             </div>
           </div>
 
-          <div className="pro-card rounded-3xl bg-white border border-slate-100 shadow-sm overflow-hidden">
-            <div className="p-5 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
-              <h3 className="text-sm font-bold text-slate-800 uppercase tracking-tight">Authorization Doc</h3>
-              <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 rounded-lg border border-emerald-100">
-                <div className="w-1 h-1 rounded-full bg-emerald-500" />
-                <span className="text-[9px] font-bold text-emerald-600 uppercase tracking-widest">Verified</span>
-              </div>
-            </div>
-            <div className="p-6">
-              <label className="flex flex-col items-center justify-center gap-3 w-full py-6 border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:border-primary hover:bg-primary/5 transition-all group">
-                <div className="w-12 h-12 rounded-xl bg-slate-50 group-hover:bg-primary flex items-center justify-center transition-all">
-                  <Zap size={18} className="text-slate-300 group-hover:text-white transition-colors" />
-                </div>
-                <div className="text-center">
-                  <p className="text-[10px] font-bold text-slate-800 uppercase tracking-widest">Sync Proof Document</p>
-                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Image or PDF</p>
-                </div>
-                <input type="file" accept="image/*,.pdf" className="hidden" />
-              </label>
-            </div>
-          </div>
+
         </div>
       </div>
 
