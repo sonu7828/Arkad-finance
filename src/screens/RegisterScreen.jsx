@@ -160,7 +160,7 @@ export default function RegisterScreen({ fixedRole }) {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 font-sans text-slate-900">
-      <div className="w-full max-w-md space-y-8">
+      <div className="w-full max-w-md space-y-4">
         
         {/* BACK BUTTON */}
         <button 
@@ -171,7 +171,7 @@ export default function RegisterScreen({ fixedRole }) {
           {step === 2 ? 'Back to Step 1' : 'Back to Login'}
         </button>
 
-        <div className="bg-white rounded-3xl p-8 shadow-xl border border-slate-100">
+        <div className="bg-white rounded-3xl p-6 shadow-xl border border-slate-100">
           {success ? (
             <div className="text-center py-12 space-y-6">
                <div className="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto shadow-inner">
@@ -183,17 +183,17 @@ export default function RegisterScreen({ fixedRole }) {
                </div>
             </div>
           ) : step === 1 ? (
-            <div className="space-y-8">
+            <div className="space-y-4">
               {/* HEADER */}
-              <div className="text-center space-y-2">
-                <div className="w-12 h-12 bg-[#0a3d62] rounded-full flex items-center justify-center text-white mx-auto shadow-lg mb-4">
-                  <Landmark size={24} />
+              <div className="text-center space-y-1">
+                <div className="w-10 h-10 bg-[#0a3d62] rounded-full flex items-center justify-center text-white mx-auto shadow-lg mb-2">
+                  <Landmark size={20} />
                 </div>
-                <h2 className="text-2xl font-black uppercase tracking-tight">Create Account</h2>
-                <p className="text-sm font-medium text-slate-400">Join our secure lending network (Step 1/2)</p>
+                <h2 className="text-xl font-black uppercase tracking-tight">Create Account</h2>
+                <p className="text-xs font-medium text-slate-400">Join our secure lending network (Step 1/2)</p>
               </div>
 
-              <form onSubmit={handleStep1Submit} className="space-y-5">
+              <form onSubmit={handleStep1Submit} className="space-y-3">
                 {/* ROLE PICKER */}
                 {!fixedRole && (
                   <div className="grid grid-cols-2 gap-3">
@@ -205,7 +205,7 @@ export default function RegisterScreen({ fixedRole }) {
                         key={r.role}
                         type="button"
                         onClick={() => update('role', r.role)}
-                        className={`p-4 rounded-2xl flex flex-col items-center gap-2 transition-all border-2 ${form.role === r.role ? 'bg-[#0a3d62] border-[#0a3d62] text-white shadow-lg' : 'bg-slate-50 border-slate-50 text-slate-400 hover:border-slate-200'}`}
+                        className={`p-2 rounded-xl flex flex-col items-center gap-1 transition-all border-2 ${form.role === r.role ? 'bg-[#0a3d62] border-[#0a3d62] text-white shadow-lg' : 'bg-slate-50 border-slate-50 text-slate-400 hover:border-slate-200'}`}
                       >
                         <r.icon size={20} />
                         <span className="text-[10px] font-bold uppercase tracking-widest">{r.label}</span>
@@ -214,11 +214,11 @@ export default function RegisterScreen({ fixedRole }) {
                   </div>
                 )}
 
-                <div className="space-y-4">
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Full Name</label>
+                <div className="space-y-2.5">
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-1">Full Name</label>
                     <input 
-                      className="w-full h-12 px-4 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:border-[#0a3d62] transition-all"
+                      className="w-full h-10 px-4 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-[#0a3d62] transition-all"
                       type="text"
                       placeholder="Enter legal name"
                       value={form.name}
@@ -227,10 +227,10 @@ export default function RegisterScreen({ fixedRole }) {
                     />
                   </div>
 
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Email Address</label>
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-1">Email Address</label>
                     <input 
-                      className="w-full h-12 px-4 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:border-[#0a3d62] transition-all"
+                      className="w-full h-10 px-4 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-[#0a3d62] transition-all"
                       type="email"
                       placeholder="name@example.com"
                       value={form.email}
@@ -239,10 +239,10 @@ export default function RegisterScreen({ fixedRole }) {
                     />
                   </div>
 
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">WhatsApp Number</label>
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-1">WhatsApp Number</label>
                     <input 
-                      className="w-full h-12 px-4 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:border-[#0a3d62] transition-all"
+                      className="w-full h-10 px-4 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-[#0a3d62] transition-all"
                       type="tel"
                       placeholder="+57 301 234 5678"
                       value={form.phone}
@@ -251,10 +251,10 @@ export default function RegisterScreen({ fixedRole }) {
                     />
                   </div>
 
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Agent Code (Optional)</label>
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-1">Agent Code (Optional)</label>
                     <input 
-                      className="w-full h-12 px-4 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:border-[#0a3d62] transition-all"
+                      className="w-full h-10 px-4 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-[#0a3d62] transition-all"
                       type="text"
                       placeholder="e.g. AG-2024-CARLOS"
                       value={form.agentCode}
@@ -262,35 +262,35 @@ export default function RegisterScreen({ fixedRole }) {
                     />
                   </div>
 
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Password</label>
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-1">Password</label>
                     <div className="relative">
                       <input 
-                        className="w-full h-12 pl-4 pr-12 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:border-[#0a3d62] transition-all"
+                        className="w-full h-10 pl-4 pr-10 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-[#0a3d62] transition-all"
                         type={showPass ? 'text' : 'password'}
                         placeholder="••••••••"
                         value={form.password}
                         onChange={e => update('password', e.target.value)}
                         required
                       />
-                      <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                        {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                      <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                        {showPass ? <EyeOff size={14} /> : <Eye size={14} />}
                       </button>
                     </div>
                   </div>
                 </div>
 
                 {error && (
-                  <div className="p-4 bg-red-50 text-red-600 rounded-xl border border-red-100 flex items-center gap-3">
-                    <ShieldAlert size={18} />
-                    <p className="text-xs font-bold uppercase tracking-tight">{error}</p>
+                  <div className="p-3 bg-red-50 text-red-600 rounded-xl border border-red-100 flex items-center gap-2">
+                    <ShieldAlert size={16} />
+                    <p className="text-[10px] font-bold uppercase tracking-tight">{error}</p>
                   </div>
                 )}
 
                 <button 
                   type="submit" 
                   disabled={loading}
-                  className="w-full h-14 bg-[#0a3d62] text-white font-bold rounded-xl shadow-lg hover:bg-[#072a44] transition-all flex items-center justify-center gap-2 group disabled:opacity-70"
+                  className="w-full h-12 bg-[#0a3d62] text-white font-bold rounded-xl shadow-lg hover:bg-[#072a44] transition-all flex items-center justify-center gap-2 group disabled:opacity-70 text-sm"
                 >
                   {loading ? 'SENDING OTP...' : 'GET VERIFICATION CODE'}
                   {!loading && <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />}
