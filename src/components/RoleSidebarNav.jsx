@@ -38,7 +38,7 @@ export default function RoleSidebarNav({
   return (
     <div className="flex flex-col h-full bg-white border-r border-slate-200/60 relative z-10">
       {/* Branding Area */}
-      <div className={`p-6 flex items-center gap-3 transition-all ${isCollapsed ? 'justify-center' : ''}`}>
+      <div className={`px-5 py-4 flex items-center gap-3 transition-all ${isCollapsed ? 'justify-center' : ''}`}>
         <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20 shrink-0">
            <Landmark size={20} strokeWidth={2.5} />
         </div>
@@ -59,7 +59,7 @@ export default function RoleSidebarNav({
       </div>
 
       {/* Navigation */}
-      <nav className={`flex-1 overflow-y-auto p-4 space-y-1 ${isCollapsed ? 'flex flex-col items-center' : ''}`}>
+      <nav className={`flex-1 overflow-y-auto px-3.5 py-3 space-y-1 ${isCollapsed ? 'flex flex-col items-center' : ''}`}>
         {!isCollapsed && (
           <p className="px-3 pb-3 text-[9px] font-bold uppercase tracking-[0.2em] text-slate-300">
             Navigation Menu
@@ -75,7 +75,7 @@ export default function RoleSidebarNav({
               onClick={onLinkClick}
               title={isCollapsed ? item.label : ''}
               className={`sidebar-link group ${
-                isCollapsed ? 'w-12 h-12 justify-center' : 'px-4 py-3'
+                isCollapsed ? 'w-12 h-12 justify-center' : ''
               } ${
                 active 
                   ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-[1.02]' 
@@ -83,7 +83,7 @@ export default function RoleSidebarNav({
               }`}
             >
               <div className={`transition-all duration-300 ${active ? 'scale-110' : 'group-hover:scale-110 group-hover:text-primary'}`}>
-                <Icon size={isCollapsed ? 22 : 18} strokeWidth={active ? 2.5 : 2} />
+                <Icon size={isCollapsed ? 20 : 17} strokeWidth={active ? 2.2 : 1.8} />
               </div>
               {!isCollapsed && (
                 <span className="truncate">{item.label}</span>
@@ -100,18 +100,18 @@ export default function RoleSidebarNav({
       <div className={`p-4 space-y-2 border-t border-slate-100`}>
         <button
           onClick={handleLogout}
-          className={`flex items-center gap-3 rounded-xl font-bold text-[13px] text-rose-500 hover:bg-rose-50 transition-all ${
-            isCollapsed ? 'w-10 h-10 justify-center' : 'px-4 py-2.5'
+          className={`flex items-center gap-2.5 rounded-lg font-bold text-[13px] text-rose-500 hover:bg-rose-50 transition-all ${
+            isCollapsed ? 'w-10 h-10 justify-center' : 'px-3.5 py-2'
           }`}
         >
-          <LogOut size={isCollapsed ? 20 : 18} />
+          <LogOut size={isCollapsed ? 20 : 17} />
           {!isCollapsed && <span>Sign Out</span>}
         </button>
 
         {!isCollapsed && (
           <button
             onClick={() => setIsSidebarCollapsed(true)}
-            className="flex items-center gap-3 px-4 py-2 w-full rounded-lg text-slate-400 hover:text-slate-600 transition-all font-bold text-[10px] uppercase tracking-widest"
+            className="flex items-center gap-2.5 px-3.5 py-1.5 w-full rounded-lg text-slate-400 hover:text-slate-600 transition-all font-bold text-[10px] uppercase tracking-widest"
           >
             <ChevronLeft size={14} />
             <span>Collapse</span>
