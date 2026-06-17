@@ -4,6 +4,7 @@ import { Menu, Bell, User as UserIcon, Landmark } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import RoleSidebarNav from '../components/RoleSidebarNav';
 import { useSidebarRoleConfig } from '../hooks/useSidebarRoleConfig';
+import NotificationBellDropdown from '../components/NotificationBellDropdown';
 
 export default function AgentLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -48,10 +49,9 @@ export default function AgentLayout() {
           </div>
 
           <div className="flex items-center gap-4">
-            <Link to="/agent/notifications" className="hidden sm:flex w-9 h-9 items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-primary hover:border-primary/20 transition-all relative">
-              <Bell size={18} />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white" />
-            </Link>
+            <div className="hidden sm:block">
+              <NotificationBellDropdown role="agent" />
+            </div>
 
             <Link to={branding.profilePath || '/agent/profile'} className="flex items-center gap-3 pl-2 pr-1 py-1 rounded-xl hover:bg-slate-50 transition-all group border-none">
               <div className="text-right hidden md:block leading-tight">

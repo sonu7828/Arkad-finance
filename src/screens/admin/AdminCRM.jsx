@@ -15,7 +15,8 @@ import {
   PlusCircle,
   X,
   Save,
-  Trash2
+  Trash2,
+  CheckCircle2
 } from 'lucide-react';
 import { PageTitle, StatusBadge, Btn, ProTable, StatCard, Modal, FormField, Input, Divider } from '../../components/UI';
 import { useLoans } from '../../context/LoanContext';
@@ -77,6 +78,7 @@ export default function AdminCRM() {
   });
   const [viewModal, setViewModal] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [showRemindersModal, setShowRemindersModal] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [newLead, setNewLead] = useState({ name: '', email: '', phone: '', status: 'NEW SIGNUP', notes: '' });
 
@@ -140,7 +142,7 @@ export default function AdminCRM() {
           <div className="flex gap-3">
             <Btn size="md" variant="outline" onClick={() => {
               if (triggerAutoReminders) triggerAutoReminders();
-              alert('Automated payment reminders have been queued for dispatch to all active loan contracts.');
+              setShowRemindersModal(true);
             }}>
               <Zap size={16} className="mr-2 text-amber-500" /> Send Reminders
             </Btn>
@@ -406,6 +408,31 @@ export default function AdminCRM() {
              </Btn>
           </div>
         </form>
+      </Modal>
+
+      {/* SEND REMINDERS SUCCESS MODAL */}
+      <Modal 
+        isOpen={showRemindersModal} 
+        onClose={() => setShowRemindersModal(false)} 
+        title="Trigger Communications"
+        size="sm"
+      >
+        <div className="space-y-5 text-center p-4">
+          <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center mx-auto border border-emerald-100 shadow-sm">
+            <CheckCircle2 size={28} />
+          </div>
+          <div>
+            <h4 className="text-base font-extrabold text-slate-900 uppercase tracking-tight">Reminders Dispatched</h4>
+            <p className="text-xs font-semibold text-slate-500 mt-2 leading-relaxed">
+              Automated payment reminders have been queued for dispatch to all active loan contracts.
+            </p>
+          </div>
+          <div className="pt-2">
+            <Btn onClick={() => setShowRemindersModal(false)} className="w-full h-12 text-[11px] uppercase tracking-widest font-bold">
+              Dismiss Notification
+            </Btn>
+          </div>
+        </div>
       </Modal>
     </div>
   );
