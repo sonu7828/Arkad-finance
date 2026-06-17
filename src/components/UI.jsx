@@ -43,24 +43,24 @@ export function StatCard({ label, value, color = '#1e293b', icon: Icon, trend, o
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={onClick ? { y: -8, scale: 1.02, backgroundColor: '#f8fafc' } : { y: -8, scale: 1.02 }}
-      whileTap={onClick ? { scale: 0.98 } : {}}
+      whileHover={onClick ? { y: -4, scale: 1.01, backgroundColor: '#f8fafc' } : { y: -4, scale: 1.01 }}
+      whileTap={onClick ? { scale: 0.99 } : {}}
       onClick={onClick}
-      className={`pro-card p-6 group flex flex-col justify-between transition-all duration-300 ${onClick ? 'cursor-pointer border-transparent hover:border-primary/20 shadow-lg hover:shadow-2xl hover:shadow-primary/5' : 'cursor-default'}`}
+      className={`pro-card p-4 group flex flex-col justify-between transition-all duration-300 ${onClick ? 'cursor-pointer border-transparent hover:border-primary/20 shadow shadow-primary/5' : 'cursor-default'}`}
     >
-      <div className="flex items-center justify-between mb-4">
-        <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:text-primary group-hover:bg-primary/5 transition-all duration-500 border border-slate-100 group-hover:border-primary/20 group-hover:rotate-6">
-          {Icon ? <Icon size={20} /> : <Activity size={20} />}
+      <div className="flex items-center justify-between mb-2.5">
+        <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 group-hover:text-primary group-hover:bg-primary/5 transition-all duration-500 border border-slate-100 group-hover:border-primary/20 group-hover:rotate-3">
+          {Icon ? <Icon size={16} /> : <Activity size={16} />}
         </div>
         {trend && (
-          <span className="text-[10px] font-bold text-emerald-500 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100 group-hover:bg-emerald-100 transition-colors">
+          <span className="text-[9px] font-bold text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 group-hover:bg-emerald-100 transition-colors">
             {trend}
           </span>
         )}
       </div>
       <div>
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">{label}</p>
-        <p className="text-2xl font-bold tracking-tight text-slate-900 leading-none group-hover:text-primary transition-colors italic">{value}</p>
+        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">{label}</p>
+        <p className="text-lg font-bold tracking-tight text-slate-900 leading-none group-hover:text-primary transition-colors italic">{value}</p>
       </div>
     </motion.div>
   );
