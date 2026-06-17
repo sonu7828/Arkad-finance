@@ -19,7 +19,7 @@ function formatMoney(value) {
 export default function BorrowerDashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { loans: globalLoans } = useLoans();
+  const { loans: globalLoans, updateLoan } = useLoans();
 
   const allLoans = useMemo(() => {
     if (!user) return [];
@@ -39,6 +39,8 @@ export default function BorrowerDashboard() {
 
   const [breakdownModal, setBreakdownModal] = useState(null);
   const [paymentActionModal, setPaymentActionModal] = useState(null);
+  const [disbursementModal, setDisbursementModal] = useState(null);
+  const [disbursementMethod, setDisbursementMethod] = useState('');
   const [now, setNow] = useState(new Date());
 
   useEffect(() => {
@@ -49,6 +51,7 @@ export default function BorrowerDashboard() {
   const activeLoans = allLoans.filter(l => l.status === 'active');
   const pendingApps = allLoans.filter(l => l.status === 'pending');
   const completedLoans = allLoans.filter(l => l.status === 'completed');
+  const approvedDisbursementLoans = allLoans.filter(l => l.status === 'terms_set');
 
   const totalOutstanding = activeLoans.reduce((sum, l) => {
     const details = calculateLoanDetails({
@@ -113,6 +116,30 @@ export default function BorrowerDashboard() {
             onClick={() => navigate('/borrower/apply')}
           >
             Apply for new loan <ArrowRight size={12} className="ml-2 inline" />
+          </Btn>
+        </div>
+      ))}
+
+      {/* APPROVED - ARRANGE DISBURSEMENT */}
+      {approvedDisbursementLoans.map(loan => (
+        <div key={loan.id} className="p-6 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/50 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-md shadow-amber-500/20 shrink-0">
+              <Building size={20} />
+            </div>
+            <div>
+              <h4 className="text-sm font-black text-amber-800 uppercase tracking-wide">Approved - Arrange Disbursement</h4>
+              <p className="text-xs font-medium text-amber-700 mt-1">
+                Contract #{loan.id} has been approved for {formatMoney(loan.principalAmount)}. Please select how you want to receive your funds.
+              </p>
+            </div>
+          </div>
+          <Btn 
+            size="sm" 
+            className="!bg-amber-600 hover:!bg-amber-700 !rounded-xl !h-10 px-4 italic font-black uppercase tracking-widest text-[9px] text-white shadow-sm shrink-0" 
+            onClick={() => setDisbursementModal(loan)}
+          >
+            Select Method <ArrowRight size={12} className="ml-2 inline" />
           </Btn>
         </div>
       ))}
@@ -427,6 +454,64 @@ export default function BorrowerDashboard() {
           </div>
         )}
       </Modal>
+
+      {/* DISBURSEMENT MODAL */}
+      <Modal isOpen={!!disbursementModal} onClose={() => { setDisbursementModal(null); setDisbursementMethod(''); }} title="Select Disbursement Method">
+        {disbursementModal && (
+          <div className="space-y-6 pt-2">
+            <div className="grid grid-cols-2 gap-4">
+              <button 
+                onClick={() => setDisbursementMethod('cash')}
+                className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${disbursementMethod === 'cash' ? 'border-primary bg-primary/5 text-primary' : 'border-slate-100 hover:border-slate-200 text-slate-500'}`}
+              >
+                <Wallet size={24} />
+                <span className="text-[10px] font-black uppercase tracking-widest">Cash Delivery</span>
+              </button>
+              <button 
+                onClick={() => setDisbursementMethod('bank')}
+                className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${disbursementMethod === 'bank' ? 'border-primary bg-primary/5 text-primary' : 'border-slate-100 hover:border-slate-200 text-slate-500'}`}
+              >
+                <Building size={24} />
+                <span className="text-[10px] font-black uppercase tracking-widest">Bank Transfer</span>
+              </button>
+            </div>
+            
+            {disbursementMethod === 'bank' && (
+              <div className="space-y-3 pt-2">
+                <input type="text" placeholder="Bank Name" className="w-full h-10 px-3 border border-slate-200 rounded-lg text-xs" />
+                <input type="text" placeholder="Account Number" className="w-full h-10 px-3 border border-slate-200 rounded-lg text-xs" />
+              </div>
+            )}
+            
+            {disbursementMethod === 'cash' && (
+              <div className="space-y-3 pt-2">
+                <input type="text" placeholder="Delivery Address / Preference" className="w-full h-10 px-3 border border-slate-200 rounded-lg text-xs" />
+              </div>
+            )}
+
+            <div className="flex gap-4 pt-4">
+              <Btn variant="outline" className="flex-1" onClick={() => { setDisbursementModal(null); setDisbursementMethod(''); }}>Cancel</Btn>
+              <Btn 
+                className="flex-1" 
+                disabled={!disbursementMethod}
+                onClick={() => {
+                  updateLoan(disbursementModal.id, { 
+                    status: 'active', 
+                    method: disbursementMethod.toUpperCase(),
+                    disbursementDate: new Date().toISOString().split('T')[0]
+                  });
+                  setDisbursementModal(null);
+                  setDisbursementMethod('');
+                  alert('Disbursement method saved! Your loan is now active.');
+                }}
+              >
+                Confirm Setup
+              </Btn>
+            </div>
+          </div>
+        )}
+      </Modal>
+
     </motion.div>
   );
 }

@@ -423,7 +423,7 @@ export default function AdminPayments() {
 
 
       {/* SCENARIO A MODAL — EXACT PAYMENT */}
-      <Modal isOpen={!!activeExactModal} onClose={() => setActiveExactModal(null)} title="Confirm Exact Payment">
+      <Modal isOpen={!!activeExactModal} onClose={() => setActiveExactModal(null)} title="✓ EXACT PAYMENT">
         {activeExactModal && exactModalData && (
           <div className="space-y-6 pt-2">
             <div className="p-5 bg-slate-50 border border-slate-100 rounded-2xl text-left space-y-2">
@@ -441,7 +441,7 @@ export default function AdminPayments() {
                 className="w-5 h-5 accent-primary cursor-pointer shrink-0"
               />
               <label htmlFor="confirmCheckboxExact" className="text-xs font-bold text-slate-700 cursor-pointer select-none">
-                I confirm that {formatMoney(exactModalData.amountDue)} has been collected
+                I confirm that {formatMoney(exactModalData.amountDue)} has been received
               </label>
             </div>
 
@@ -461,13 +461,13 @@ export default function AdminPayments() {
       </Modal>
 
       {/* SCENARIO B MODAL — PARTIAL PAYMENT */}
-      <Modal isOpen={!!activePartialModal} onClose={() => setActivePartialModal(null)} title="PARTIAL PAYMENT WARNING">
+      <Modal isOpen={!!activePartialModal} onClose={() => setActivePartialModal(null)} title="PARTIAL PAYMENT">
         {activePartialModal && (
           <div className="space-y-6 pt-2 text-left">
             <div className="p-4 bg-amber-50 border border-amber-200 text-amber-900 rounded-2xl flex items-start gap-3">
               <AlertTriangle className="text-amber-600 shrink-0 mt-0.5" size={20} />
               <div>
-                <h4 className="text-sm font-extrabold uppercase">PARTIAL PAYMENT DETAILS</h4>
+                <h4 className="text-sm font-extrabold uppercase">PARTIAL PAYMENT</h4>
                 <p className="text-xs font-semibold text-amber-700 mt-1">The borrower is paying less than the amount due.</p>
               </div>
             </div>
@@ -478,12 +478,12 @@ export default function AdminPayments() {
                 <span>{formatMoney(activePartialModal.due)}</span>
               </div>
               <div className="flex justify-between text-slate-900">
-                <span>Amount Collected:</span>
+                <span>Amount Received:</span>
                 <span>{formatMoney(activePartialModal.collected)}</span>
               </div>
               <Divider className="my-1 opacity-50" />
               <div className="flex justify-between text-rose-600">
-                <span>Remaining Shortfall:</span>
+                <span>Remaining:</span>
                 <span>{formatMoney(activePartialModal.remaining)}</span>
               </div>
             </div>
@@ -512,13 +512,13 @@ export default function AdminPayments() {
       </Modal>
 
       {/* SCENARIO C MODAL — OVERPAYMENT */}
-      <Modal isOpen={!!activeOverpaymentModal} onClose={() => setActiveOverpaymentModal(null)} title="OVERPAYMENT CALIBRATION">
+      <Modal isOpen={!!activeOverpaymentModal} onClose={() => setActiveOverpaymentModal(null)} title="✓ OVERPAYMENT">
         {activeOverpaymentModal && (
           <div className="space-y-6 pt-2 text-left">
             <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-2xl flex items-start gap-3">
               <CheckCircle2 className="text-emerald-600 shrink-0 mt-0.5" size={20} />
               <div>
-                <h4 className="text-sm font-extrabold uppercase">✓ OVERPAYMENT ACCOUNTING</h4>
+                <h4 className="text-sm font-extrabold uppercase">✓ OVERPAYMENT</h4>
                 <p className="text-xs font-semibold text-emerald-700 mt-1">The borrower is paying more than the amount due.</p>
               </div>
             </div>
@@ -529,20 +529,20 @@ export default function AdminPayments() {
                 <span>{formatMoney(activeOverpaymentModal.due)}</span>
               </div>
               <div className="flex justify-between text-slate-900">
-                <span>Amount Collected:</span>
+                <span>Amount Received:</span>
                 <span>{formatMoney(activeOverpaymentModal.collected)}</span>
               </div>
               <Divider className="my-1 opacity-50" />
               <div className="flex justify-between text-emerald-600">
-                <span>Surplus (Overpayment):</span>
+                <span>Overpayment:</span>
                 <span>{formatMoney(activeOverpaymentModal.overpayment)}</span>
               </div>
               <div className="flex justify-between text-slate-600 text-xs pl-4">
-                <span>• Interest Payment Applied:</span>
+                <span>Interest Payment:</span>
                 <span>{formatMoney(activeOverpaymentModal.due)}</span>
               </div>
               <div className="flex justify-between text-emerald-600 text-xs pl-4 font-extrabold">
-                <span>• Principal Reduction Applied:</span>
+                <span>Principal Reduction:</span>
                 <span>{formatMoney(activeOverpaymentModal.overpayment)} ↓</span>
               </div>
             </div>
