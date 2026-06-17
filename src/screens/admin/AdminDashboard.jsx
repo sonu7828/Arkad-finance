@@ -246,12 +246,12 @@ export default function AdminDashboard() {
       className="space-y-8 max-w-[1600px] mx-auto pb-10"
     >
       {/* PROFESSIONAL HEADER */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Intelligence Dashboard</h1>
           <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Real-time credit & operations monitoring</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 md:gap-3">
           <Btn variant="ghost" size="sm" onClick={() => { window.location.reload(); }}>
             <RefreshCw size={14} className="mr-2" /> Refresh
           </Btn>
@@ -271,7 +271,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-6 border-b border-slate-100 pb-1">
+      <div className="flex overflow-x-auto no-scrollbar whitespace-nowrap gap-6 border-b border-slate-100 pb-1">
         <button
           onClick={() => setActiveTab('overview')}
           className={`pb-4 text-xs font-black uppercase tracking-widest border-b-2 transition-all ${activeTab === 'overview' ? 'border-primary text-primary' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
@@ -361,15 +361,12 @@ export default function AdminDashboard() {
                         <td><span className="text-xs font-bold text-amber-600">{formatDate(loan.dueDate)}</span></td>
                         <td><StatusBadge status={calculateLoanStatus(loan)} /></td>
                         <td className="text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            <button onClick={() => { setSelectedLoan(loan); setIsEditModalOpen(true); }} className="p-2 text-slate-300 hover:text-primary transition-colors">
-                              <Edit2 size={14} />
+                          <div className="flex items-center justify-end gap-2">
+                            <button onClick={() => { setSelectedLoan(loan); setIsEditModalOpen(true); }} className="p-2 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors shadow-sm">
+                              <Edit2 size={16} strokeWidth={2.5} />
                             </button>
-                            <button onClick={() => navigate('/admin/loans?status=active')} className="p-2 text-slate-300 hover:text-primary transition-colors hidden md:block">
-                              <ExternalLink size={14} />
-                            </button>
-                            <button onClick={() => { setSelectedLoan(loan); setIsDeleteModalOpen(true); }} className="p-2 text-slate-300 hover:text-rose-500 transition-colors">
-                              <X size={14} />
+                            <button onClick={() => { setSelectedLoan(loan); setIsDeleteModalOpen(true); }} className="p-2 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors shadow-sm">
+                              <X size={16} strokeWidth={2.5} />
                             </button>
                           </div>
                         </td>
@@ -492,7 +489,7 @@ export default function AdminDashboard() {
                    <h3 className="text-base font-bold text-slate-900 uppercase tracking-wider">Collections Velocity Analysis</h3>
                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Daily / Weekly / Monthly inbound flow monitoring</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   {['daily', 'weekly', 'monthly'].map(t => (
                     <button
                       key={t}
